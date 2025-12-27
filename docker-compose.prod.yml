@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: crm_db_prod
+    environment:
+      POSTGRES_USER: ${DB_USER:-crm_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_this_password}
+      POSTGRES_DB: ${DB_NAME:-team_crm_prod}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    networks:
+      - crm_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-crm_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: crm_backend_prod
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${DB_USER:-crm_user}:${DB_PASSWORD:-change_this_password}@db:5432/${DB_NAME:-team_crm_prod}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - crm_network
+    volumes:
+      - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./web-crm
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    container_name: crm_frontend_prod
+    ports:
+      - "3002:3000"
+    networks:
+      - crm_network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  postgres_data_prod:
+
+networks:
+  crm_network:
+    driver: bridge
