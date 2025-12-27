@@ -14,9 +14,12 @@ app = FastAPI(
 )
 
 # CORS middleware
+# Parse ALLOWED_ORIGINS from settings (comma-separated string to list)
+allowed_origins = [origin.strip() for origin in settings.ALLOWED_ORIGINS.split(",")] if hasattr(settings, 'ALLOWED_ORIGINS') and settings.ALLOWED_ORIGINS else ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
