@@ -1,4 +1,4 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import Optional
 import os
 
@@ -23,13 +23,13 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
     PROJECT_NAME: str = "Team Management CRM"
 
-    class Config:
-        # Read from .env file if it exists (local dev), but also from environment variables (production)
-        # If .env doesn't exist, that's fine - will use environment variables
-        env_file = ".env" if os.path.exists(".env") else None
-        env_file_encoding = 'utf-8'
-        case_sensitive = True
-        extra = 'ignore'
+    # Pydantic v2 configuration
+    model_config = SettingsConfigDict(
+        env_file=".env" if os.path.exists(".env") else None,
+        env_file_encoding='utf-8',
+        case_sensitive=True,
+        extra='ignore'
+    )
 
 
 settings = Settings()
