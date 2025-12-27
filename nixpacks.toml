@@ -1,8 +1,12 @@
+[variables]
+NIXPACKS_PYTHON_VERSION = '3.11'
+
 [phases.setup]
-nixPkgs = ['python311', 'postgresql']
+nixPkgs = ['python311', 'postgresql', 'pip']
 
 [phases.install]
-cmds = ['cd backend && pip install -r requirements.txt']
+dependsOn = ['setup']
+cmds = ['pip install -r backend/requirements.txt']
 
 [start]
-cmd = 'cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT'
+cmd = 'cd backend && python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1'
