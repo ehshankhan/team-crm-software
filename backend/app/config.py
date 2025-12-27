@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import os
 
 
 class Settings(BaseSettings):
@@ -23,8 +24,12 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Team Management CRM"
 
     class Config:
-        env_file = ".env"
+        # Read from .env file if it exists (local dev), but also from environment variables (production)
+        # If .env doesn't exist, that's fine - will use environment variables
+        env_file = ".env" if os.path.exists(".env") else None
+        env_file_encoding = 'utf-8'
         case_sensitive = True
+        extra = 'ignore'
 
 
 settings = Settings()
