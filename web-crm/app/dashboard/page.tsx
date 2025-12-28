@@ -158,7 +158,6 @@ export default function DashboardPage() {
                         <tr key={task.id} className="hover:bg-gray-50">
                           <td className="px-4 py-3 whitespace-nowrap">
                             <div className="text-sm font-medium text-gray-900">{task.title}</div>
-                            <div className="text-xs text-gray-500">{task.board.name}</div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                             {task.board.project.name}
