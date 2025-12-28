@@ -10,7 +10,8 @@ import {
   FileText,
   FolderKanban,
   Package,
-  LogOut
+  LogOut,
+  ClipboardList
 } from 'lucide-react';
 
 const navigationItems = [
@@ -18,6 +19,7 @@ const navigationItems = [
   { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['super_admin'] },
   { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
   { name: 'Timesheets', href: '/dashboard/timesheets', icon: FileText },
+  { name: 'Daily Tracker', href: '/dashboard/daily-log', icon: ClipboardList },
   { name: 'Projects', href: '/dashboard/projects', icon: FolderKanban },
   { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
 ];

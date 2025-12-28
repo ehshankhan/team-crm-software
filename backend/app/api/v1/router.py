@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import auth, users, attendance, timesheets, projects, boards, tasks, inventory, dashboard
+from app.api.v1 import auth, users, attendance, timesheets, projects, boards, tasks, inventory, dashboard, daily_logs
 
 api_router = APIRouter()
 
@@ -13,3 +13,4 @@ api_router.include_router(boards.router, prefix="/boards", tags=["Boards"])
 api_router.include_router(tasks.router, prefix="/tasks", tags=["Tasks"])
 api_router.include_router(inventory.router, prefix="/inventory", tags=["Inventory"])
 api_router.include_router(dashboard.router, prefix="/dashboard", tags=["Dashboard"])
+api_router.include_router(daily_logs.router, prefix="/daily-logs", tags=["Daily Logs"])

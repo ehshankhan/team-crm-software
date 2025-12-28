@@ -23,6 +23,7 @@ class Project(Base):
     creator = relationship("User", back_populates="created_projects", foreign_keys=[created_by])
     members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
     boards = relationship("Board", back_populates="project", cascade="all, delete-orphan")
+    daily_logs = relationship("DailyLog", back_populates="project")
 
 
 class ProjectMember(Base):
