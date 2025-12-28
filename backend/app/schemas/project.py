@@ -5,6 +5,25 @@ from uuid import UUID
 from decimal import Decimal
 
 
+# User schemas (minimal for nested responses)
+class UserMinimal(BaseModel):
+    id: UUID
+    full_name: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
+# Project schemas (minimal for nested responses)
+class ProjectMinimal(BaseModel):
+    id: UUID
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
 # Project Member schemas
 class ProjectMemberBase(BaseModel):
     user_id: UUID
@@ -113,6 +132,32 @@ class TaskResponse(TaskBase):
     created_at: datetime
     updated_at: datetime
     comments: Optional[List[TaskCommentResponse]] = []
+
+    class Config:
+        from_attributes = True
+
+
+# Board with project (for deadline tasks)
+class BoardWithProject(BaseModel):
+    id: UUID
+    name: str
+    project: ProjectMinimal
+
+    class Config:
+        from_attributes = True
+
+
+# Task with full details (for deadlines)
+class TaskWithDetails(TaskBase):
+    id: UUID
+    board_id: UUID
+    position: int
+    assignee_id: Optional[UUID] = None
+    created_by: UUID
+    created_at: datetime
+    updated_at: datetime
+    board: BoardWithProject
+    assignee: Optional[UserMinimal] = None
 
     class Config:
         from_attributes = True

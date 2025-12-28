@@ -10,7 +10,8 @@ from app.schemas.project import (
     TaskPositionUpdate,
     TaskResponse,
     TaskCommentCreate,
-    TaskCommentResponse
+    TaskCommentResponse,
+    TaskWithDetails
 )
 from app.models.project import Task, TaskComment, Board, ProjectMember, Project
 from app.models.user import User
@@ -341,7 +342,7 @@ def add_task_comment(
     return comment
 
 
-@router.get("/upcoming-deadlines/all", response_model=List[TaskResponse])
+@router.get("/upcoming-deadlines/all", response_model=List[TaskWithDetails])
 def get_upcoming_deadlines(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
