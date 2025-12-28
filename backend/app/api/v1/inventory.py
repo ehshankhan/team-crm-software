@@ -461,7 +461,11 @@ def get_item_transactions(
             detail="Inventory item not found"
         )
 
-    transactions = db.query(InventoryTransaction).filter(
+    from sqlalchemy.orm import joinedload
+
+    transactions = db.query(InventoryTransaction).options(
+        joinedload(InventoryTransaction.user)
+    ).filter(
         InventoryTransaction.item_id == item_id
     ).order_by(InventoryTransaction.created_at.desc()).offset(skip).limit(limit).all()
 

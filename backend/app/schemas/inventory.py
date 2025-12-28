@@ -5,6 +5,16 @@ from uuid import UUID
 from decimal import Decimal
 
 
+# User schema for nested relations
+class UserBasic(BaseModel):
+    id: UUID
+    username: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
 # Inventory Category schemas
 class InventoryCategoryBase(BaseModel):
     name: str
@@ -53,6 +63,7 @@ class InventoryTransactionResponse(InventoryTransactionBase):
     id: UUID
     item_id: UUID
     user_id: UUID
+    user: Optional[UserBasic] = None
     quantity_before: int
     quantity_after: int
     created_at: datetime

@@ -174,8 +174,15 @@ export default function TransactionHistoryModal({ item, onClose }: TransactionHi
                       <td className="px-4 py-3 text-sm text-gray-500 max-w-xs truncate">
                         {transaction.reason || '-'}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {transaction.user_id ? 'User' : 'System'}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm">
+                        {transaction.user ? (
+                          <div>
+                            <div className="text-gray-900 font-medium">{transaction.user.username}</div>
+                            <div className="text-gray-500 text-xs">{transaction.user.email}</div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500">System</span>
+                        )}
                       </td>
                     </tr>
                   ))}

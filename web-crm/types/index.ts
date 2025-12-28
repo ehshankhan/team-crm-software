@@ -177,6 +177,11 @@ export interface InventoryTransaction {
   id: string;
   item_id: string;
   user_id: string;
+  user?: {
+    id: string;
+    username: string;
+    email: string;
+  };
   action: 'stock_in' | 'stock_out';
   quantity_change: number;
   quantity_before: number;
