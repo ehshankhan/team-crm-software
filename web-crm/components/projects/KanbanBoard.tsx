@@ -9,6 +9,7 @@ import TaskCard from './TaskCard';
 
 interface KanbanBoardProps {
   project: Project;
+  isMember: boolean;
   onCreateTask: (boardId: string) => void;
   onTaskClick: (task: Task) => void;
   onRefresh: () => void;
@@ -21,7 +22,7 @@ interface BoardColumn {
   tasks: Task[];
 }
 
-export default function KanbanBoard({ project, onCreateTask, onTaskClick, onRefresh }: KanbanBoardProps) {
+export default function KanbanBoard({ project, isMember, onCreateTask, onTaskClick, onRefresh }: KanbanBoardProps) {
   const [boards, setBoards] = useState<BoardColumn[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +59,7 @@ export default function KanbanBoard({ project, onCreateTask, onTaskClick, onRefr
         <BoardColumn
           key={board.id}
           board={board}
+          isMember={isMember}
           onCreateTask={onCreateTask}
           onTaskClick={onTaskClick}
         />
@@ -68,11 +70,12 @@ export default function KanbanBoard({ project, onCreateTask, onTaskClick, onRefr
 
 interface BoardColumnProps {
   board: BoardColumn;
+  isMember: boolean;
   onCreateTask: (boardId: string) => void;
   onTaskClick: (task: Task) => void;
 }
 
-function BoardColumn({ board, onCreateTask, onTaskClick }: BoardColumnProps) {
+function BoardColumn({ board, isMember, onCreateTask, onTaskClick }: BoardColumnProps) {
   const { setNodeRef } = useDroppable({
     id: board.id,
   });
@@ -90,13 +93,15 @@ function BoardColumn({ board, onCreateTask, onTaskClick }: BoardColumnProps) {
             <h3 className="font-semibold text-gray-900">{board.name}</h3>
             <span className="ml-2 text-sm text-gray-500">({board.tasks.length})</span>
           </div>
-          <button
-            onClick={() => onCreateTask(board.id)}
-            className="text-gray-500 hover:text-gray-700"
-            title="Add task"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
+          {isMember && (
+            <button
+              onClick={() => onCreateTask(board.id)}
+              className="text-gray-500 hover:text-gray-700"
+              title="Add task"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          )}
         </div>
 
         {/* Tasks Drop Zone */}

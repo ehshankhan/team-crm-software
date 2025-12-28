@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Project, Task } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { ArrowLeft, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -15,12 +16,17 @@ import TaskDetailModal from '@/components/projects/TaskDetailModal';
 export default function ProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
+  const { user } = useAuthStore();
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showCreateTask, setShowCreateTask] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+
+  // Check if user is a project member or admin/manager
+  const canManage = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
+  const isMember = canManage || project?.members?.some(m => m.user_id === user?.id) || false;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -153,6 +159,7 @@ export default function ProjectDetailPage() {
       >
         <KanbanBoard
           project={project}
+          isMember={isMember}
           onCreateTask={(boardId) => setShowCreateTask(boardId)}
           onTaskClick={(task) => setSelectedTask(task)}
           onRefresh={fetchProject}

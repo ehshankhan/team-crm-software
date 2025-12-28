@@ -49,16 +49,10 @@ def list_projects(
     """
     List all projects.
 
-    Returns projects the user is a member of, or all projects for managers/admins.
+    All users can view all projects, but only members can edit/add tasks.
     """
-    if can_manage_projects(current_user):
-        # Managers and admins can see all projects
-        projects = db.query(Project).offset(skip).limit(limit).all()
-    else:
-        # Employees see only projects they're members of
-        projects = db.query(Project).join(ProjectMember).filter(
-            ProjectMember.user_id == current_user.id
-        ).offset(skip).limit(limit).all()
+    # All users can see all projects
+    projects = db.query(Project).offset(skip).limit(limit).all()
 
     return projects
 
@@ -126,6 +120,8 @@ def get_project(
 ):
     """
     Get project details with boards and members.
+
+    All users can view project details, but only members can edit/add tasks.
     """
     project = db.query(Project).filter(Project.id == project_id).first()
 
@@ -135,19 +131,7 @@ def get_project(
             detail="Project not found"
         )
 
-    # Check if user has access to this project
-    if not can_manage_projects(current_user):
-        is_member = db.query(ProjectMember).filter(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == current_user.id
-        ).first()
-
-        if not is_member:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You don't have access to this project"
-            )
-
+    # All users can view projects (viewing is allowed, editing is restricted to members)
     return project
 
 
@@ -311,3 +295,382 @@ def remove_project_member(
     db.commit()
 
     return {"message": "Project member removed successfully"}
+
+
+# ==================== BOARD ENDPOINTS ====================
+
+@router.get("/boards/{board_id}/tasks", response_model=List[TaskResponse])
+def list_board_tasks(
+    board_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all tasks for a board.
+
+    All users can view tasks (read-only for non-members).
+    """
+    # Verify board exists and get its project
+    board = db.query(Board).filter(Board.id == board_id).first()
+
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Board not found"
+        )
+
+    # All users can view tasks (editing restricted to project members)
+    tasks = db.query(Task).filter(Task.board_id == board_id).order_by(Task.position).all()
+
+    return tasks
+
+
+@router.put("/boards/{board_id}", response_model=BoardResponse)
+def update_board(
+    board_id: UUID,
+    board_data: BoardUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update a board.
+
+    Only managers/admins can update boards.
+    """
+    board = db.query(Board).filter(Board.id == board_id).first()
+
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Board not found"
+        )
+
+    # Check permissions
+    if not can_manage_projects(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only managers and admins can update boards"
+        )
+
+    # Update fields
+    update_data = board_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(board, field, value)
+
+    db.commit()
+    db.refresh(board)
+
+    return board
+
+
+# ==================== TASK ENDPOINTS ====================
+
+@router.post("/boards/{board_id}/tasks", response_model=TaskResponse, status_code=status.HTTP_201_CREATED)
+def create_task(
+    board_id: UUID,
+    task_data: TaskCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Create a new task in a board.
+
+    Only project members can create tasks.
+    """
+    # Verify board exists
+    board = db.query(Board).filter(Board.id == board_id).first()
+
+    if not board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Board not found"
+        )
+
+    # Check if user is a project member or manager/admin
+    if not can_manage_projects(current_user):
+        is_member = db.query(ProjectMember).filter(
+            ProjectMember.project_id == board.project_id,
+            ProjectMember.user_id == current_user.id
+        ).first()
+
+        if not is_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a project member to create tasks"
+            )
+
+    # Create task
+    task = Task(
+        board_id=board_id,
+        title=task_data.title,
+        description=task_data.description,
+        priority=task_data.priority,
+        due_date=task_data.due_date,
+        estimated_hours=task_data.estimated_hours,
+        assignee_id=task_data.assignee_id,
+        position=task_data.position,
+        created_by=current_user.id
+    )
+    db.add(task)
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+
+@router.get("/tasks/{task_id}", response_model=TaskResponse)
+def get_task(
+    task_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get task details.
+
+    All users can view tasks (read-only for non-members).
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+
+    # All users can view tasks (editing restricted to project members)
+    return task
+
+
+@router.put("/tasks/{task_id}", response_model=TaskResponse)
+def update_task(
+    task_id: UUID,
+    task_data: TaskUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update a task.
+
+    Only project members can update tasks.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+
+    # Check if user is a project member or manager/admin
+    board = db.query(Board).filter(Board.id == task.board_id).first()
+
+    if not can_manage_projects(current_user):
+        is_member = db.query(ProjectMember).filter(
+            ProjectMember.project_id == board.project_id,
+            ProjectMember.user_id == current_user.id
+        ).first()
+
+        if not is_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a project member to update tasks"
+            )
+
+    # Update fields
+    update_data = task_data.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(task, field, value)
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+
+@router.put("/tasks/{task_id}/move", response_model=TaskResponse)
+def move_task(
+    task_id: UUID,
+    move_data: TaskMove,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Move a task to a different board.
+
+    Only project members can move tasks.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+
+    # Verify target board exists
+    target_board = db.query(Board).filter(Board.id == move_data.board_id).first()
+
+    if not target_board:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Target board not found"
+        )
+
+    # Get source board
+    source_board = db.query(Board).filter(Board.id == task.board_id).first()
+
+    # Verify both boards belong to same project
+    if source_board.project_id != target_board.project_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot move task to a board in a different project"
+        )
+
+    # Check if user is a project member or manager/admin
+    if not can_manage_projects(current_user):
+        is_member = db.query(ProjectMember).filter(
+            ProjectMember.project_id == target_board.project_id,
+            ProjectMember.user_id == current_user.id
+        ).first()
+
+        if not is_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a project member to move tasks"
+            )
+
+    # Move task
+    task.board_id = move_data.board_id
+    task.position = move_data.position
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+
+@router.delete("/tasks/{task_id}", status_code=status.HTTP_200_OK)
+def delete_task(
+    task_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a task.
+
+    Only project members can delete tasks.
+    """
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+
+    # Check if user is a project member or manager/admin
+    board = db.query(Board).filter(Board.id == task.board_id).first()
+
+    if not can_manage_projects(current_user):
+        is_member = db.query(ProjectMember).filter(
+            ProjectMember.project_id == board.project_id,
+            ProjectMember.user_id == current_user.id
+        ).first()
+
+        if not is_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a project member to delete tasks"
+            )
+
+    db.delete(task)
+    db.commit()
+
+    return {"message": "Task deleted successfully"}
+
+
+# ==================== TASK COMMENT ENDPOINTS ====================
+
+@router.post("/tasks/{task_id}/comments", response_model=TaskCommentResponse, status_code=status.HTTP_201_CREATED)
+def create_task_comment(
+    task_id: UUID,
+    comment_data: TaskCommentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Add a comment to a task.
+
+    Only project members can comment.
+    """
+    # Verify task exists
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task not found"
+        )
+
+    # Check if user is a project member or manager/admin
+    board = db.query(Board).filter(Board.id == task.board_id).first()
+
+    if not can_manage_projects(current_user):
+        is_member = db.query(ProjectMember).filter(
+            ProjectMember.project_id == board.project_id,
+            ProjectMember.user_id == current_user.id
+        ).first()
+
+        if not is_member:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You must be a project member to comment"
+            )
+
+    # Create comment
+    comment = TaskComment(
+        task_id=task_id,
+        user_id=current_user.id,
+        content=comment_data.content
+    )
+    db.add(comment)
+    db.commit()
+    db.refresh(comment)
+
+    return comment
+
+
+@router.delete("/tasks/{task_id}/comments/{comment_id}", status_code=status.HTTP_200_OK)
+def delete_task_comment(
+    task_id: UUID,
+    comment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete a task comment.
+
+    Only the comment author or managers/admins can delete comments.
+    """
+    comment = db.query(TaskComment).filter(
+        TaskComment.id == comment_id,
+        TaskComment.task_id == task_id
+    ).first()
+
+    if not comment:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found"
+        )
+
+    # Only comment author or managers/admins can delete
+    if comment.user_id != current_user.id and not can_manage_projects(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own comments"
+        )
+
+    db.delete(comment)
+    db.commit()
+
+    return {"message": "Comment deleted successfully"}
