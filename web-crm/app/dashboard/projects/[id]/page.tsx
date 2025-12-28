@@ -73,20 +73,52 @@ export default function ProjectDetailPage() {
     const task = findTask(taskId);
     if (!task) return;
 
-    // If dropped on same board, do nothing
-    if (task.board_id === targetBoardId) return;
+    const sourceBoardId = task.board_id;
 
+    // If dropped on same board, do nothing
+    if (sourceBoardId === targetBoardId) return;
+
+    // Optimistic update: Move task immediately in UI
+    setBoardTasks(prev => {
+      const newMap = new Map(prev);
+
+      // Remove from source board
+      const sourceTasks = newMap.get(sourceBoardId) || [];
+      const updatedSourceTasks = sourceTasks.filter(t => t.id !== taskId);
+      newMap.set(sourceBoardId, updatedSourceTasks);
+
+      // Add to target board
+      const targetTasks = newMap.get(targetBoardId) || [];
+      const movedTask = { ...task, board_id: targetBoardId, position: 0 };
+      newMap.set(targetBoardId, [movedTask, ...targetTasks]);
+
+      return newMap;
+    });
+
+    // Sync with server in background
     try {
-      // Move task to new board
       await api.put(`/tasks/${taskId}/move`, {
         board_id: targetBoardId,
         position: 0,
       });
-
-      // Refresh project data
-      fetchProject();
     } catch (err) {
       console.error('Failed to move task:', err);
+      // Revert on error
+      setBoardTasks(prev => {
+        const newMap = new Map(prev);
+
+        // Remove from target board
+        const targetTasks = newMap.get(targetBoardId) || [];
+        const revertedTargetTasks = targetTasks.filter(t => t.id !== taskId);
+        newMap.set(targetBoardId, revertedTargetTasks);
+
+        // Add back to source board
+        const sourceTasks = newMap.get(sourceBoardId) || [];
+        newMap.set(sourceBoardId, [...sourceTasks, task]);
+
+        return newMap;
+      });
+      alert('Failed to move task. Please try again.');
     }
   };
 
