@@ -14,9 +14,9 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     # Lab Location (for GPS validation)
-    LAB_LATITUDE: float = 28.544396761789827
-    LAB_LONGITUDE: float = 77.19271651688473
-    LAB_RADIUS_METERS: int = 200
+    LAB_LATITUDE: float = 28.5398
+    LAB_LONGITUDE: float = 77.1866
+    LAB_RADIUS_METERS: int = 500
 
     # App
     DEBUG: bool = True
