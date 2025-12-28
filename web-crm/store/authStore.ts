@@ -24,8 +24,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const { access_token, refresh_token } = response.data;
 
       // Store tokens
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('refreshToken', refresh_token);
 
       // Fetch user data
       const userResponse = await api.get<User>('/auth/me');
@@ -40,13 +40,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   logout: () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     set({ user: null });
   },
 
   fetchCurrentUser: async () => {
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('token');
     if (!token) {
       return;
     }
@@ -57,8 +57,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({ user: response.data, isLoading: false });
     } catch (error) {
       set({ user: null, isLoading: false });
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
     }
   },
 
