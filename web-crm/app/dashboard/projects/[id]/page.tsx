@@ -6,12 +6,13 @@ import { api } from '@/lib/api';
 import { Project, Task } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Users } from 'lucide-react';
 import Link from 'next/link';
 import KanbanBoard from '@/components/projects/KanbanBoard';
 import TaskCard from '@/components/projects/TaskCard';
 import CreateTaskModal from '@/components/projects/CreateTaskModal';
 import TaskDetailModal from '@/components/projects/TaskDetailModal';
+import ProjectMembersModal from '@/components/projects/ProjectMembersModal';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -23,6 +24,7 @@ export default function ProjectDetailPage() {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [showCreateTask, setShowCreateTask] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   // Check if user is a project member or admin/manager
   const canManage = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
@@ -146,10 +148,23 @@ export default function ProjectDetailPage() {
       </div>
 
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">{project.name}</h1>
-        {project.description && (
-          <p className="mt-2 text-sm text-gray-600">{project.description}</p>
-        )}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900">{project.name}</h1>
+            {project.description && (
+              <p className="mt-2 text-sm text-gray-600">{project.description}</p>
+            )}
+          </div>
+          {canManage && (
+            <button
+              onClick={() => setShowMembers(true)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              Members ({project.members?.length || 0})
+            </button>
+          )}
+        </div>
       </div>
 
       <DndContext
@@ -184,6 +199,14 @@ export default function ProjectDetailPage() {
           task={selectedTask}
           onClose={() => setSelectedTask(null)}
           onUpdate={handleTaskUpdated}
+        />
+      )}
+
+      {showMembers && project && (
+        <ProjectMembersModal
+          project={project}
+          onClose={() => setShowMembers(false)}
+          onUpdate={fetchProject}
         />
       )}
     </div>
