@@ -1,5 +1,5 @@
 # Environment Variables (IMPORTANT: Never commit sensitive data)
-.env
+# .env (temporarily allowing for Railway deployment - will remove after deploy)
 .env.local
 .env.production
 .env.*.local
