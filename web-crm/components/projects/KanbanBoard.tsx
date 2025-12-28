@@ -13,6 +13,7 @@ interface KanbanBoardProps {
   onCreateTask: (boardId: string) => void;
   onTaskClick: (task: Task) => void;
   onRefresh: () => void;
+  onTasksLoaded: (boardId: string, tasks: Task[]) => void;
 }
 
 interface BoardColumn {
@@ -22,7 +23,7 @@ interface BoardColumn {
   tasks: Task[];
 }
 
-export default function KanbanBoard({ project, isMember, onCreateTask, onTaskClick, onRefresh }: KanbanBoardProps) {
+export default function KanbanBoard({ project, isMember, onCreateTask, onTaskClick, onRefresh, onTasksLoaded }: KanbanBoardProps) {
   const [boards, setBoards] = useState<BoardColumn[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,12 +38,17 @@ export default function KanbanBoard({ project, isMember, onCreateTask, onTaskCli
 
       for (const board of project.boards) {
         const response = await api.get<Task[]>(`/boards/${board.id}/tasks`);
+        const sortedTasks = response.data.sort((a, b) => a.position - b.position);
+
         boardsWithTasks.push({
           id: board.id,
           name: board.name,
           color: board.color,
-          tasks: response.data.sort((a, b) => a.position - b.position),
+          tasks: sortedTasks,
         });
+
+        // Notify parent about loaded tasks
+        onTasksLoaded(board.id, sortedTasks);
       }
 
       setBoards(boardsWithTasks);

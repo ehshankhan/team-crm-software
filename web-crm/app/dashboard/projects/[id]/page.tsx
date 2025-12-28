@@ -25,6 +25,7 @@ export default function ProjectDetailPage() {
   const [showCreateTask, setShowCreateTask] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [boardTasks, setBoardTasks] = useState<Map<string, Task[]>>(new Map());
 
   // Check if user is a project member or admin/manager
   const canManage = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
@@ -93,17 +94,19 @@ export default function ProjectDetailPage() {
     if (!project) return null;
 
     for (const board of project.boards) {
-      const tasks = getBoardTasks(board.id);
+      const tasks = boardTasks.get(board.id) || [];
       const task = tasks.find(t => t.id === taskId);
       if (task) return task;
     }
     return null;
   };
 
-  const getBoardTasks = (boardId: string): Task[] => {
-    // In a real app, tasks would be fetched separately
-    // For now, return empty array as tasks are loaded separately
-    return [];
+  const handleTasksLoaded = (boardId: string, tasks: Task[]) => {
+    setBoardTasks(prev => {
+      const newMap = new Map(prev);
+      newMap.set(boardId, tasks);
+      return newMap;
+    });
   };
 
   const handleTaskCreated = () => {
@@ -178,6 +181,7 @@ export default function ProjectDetailPage() {
           onCreateTask={(boardId) => setShowCreateTask(boardId)}
           onTaskClick={(task) => setSelectedTask(task)}
           onRefresh={fetchProject}
+          onTasksLoaded={handleTasksLoaded}
         />
 
         <DragOverlay>
