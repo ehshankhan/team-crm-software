@@ -349,12 +349,12 @@ def get_upcoming_deadlines(
 ):
     """
     Get tasks with deadlines within 2 days, excluding tasks in Review or Done boards.
-    Only returns tasks from projects the user has access to.
+    Visible to all team members regardless of project membership.
     """
     today = date.today()
     deadline_threshold = today + timedelta(days=2)
 
-    # Get all tasks with upcoming deadlines
+    # Get all tasks with upcoming deadlines (visible to everyone)
     query = db.query(Task).options(
         joinedload(Task.board).joinedload(Board.project),
         joinedload(Task.assignee)
@@ -364,17 +364,6 @@ def get_upcoming_deadlines(
         Task.due_date >= today,
         Board.name.notin_(["Review", "Done"])
     )
-
-    # Filter by user access
-    if not can_manage_projects(current_user):
-        # Get projects where user is a member
-        member_projects = db.query(ProjectMember.project_id).filter(
-            ProjectMember.user_id == current_user.id
-        ).subquery()
-
-        query = query.join(Project).filter(
-            Project.id.in_(member_projects)
-        )
 
     tasks = query.order_by(Task.due_date).all()
     return tasks
