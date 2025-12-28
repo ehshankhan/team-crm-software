@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from uuid import UUID
+from datetime import date, timedelta
 from app.database import get_db
 from app.schemas.project import (
     TaskUpdate,
@@ -11,7 +12,7 @@ from app.schemas.project import (
     TaskCommentCreate,
     TaskCommentResponse
 )
-from app.models.project import Task, TaskComment, Board, ProjectMember
+from app.models.project import Task, TaskComment, Board, ProjectMember, Project
 from app.models.user import User
 from app.core.permissions import can_manage_projects
 from app.api.deps import get_current_user
@@ -338,3 +339,41 @@ def add_task_comment(
     db.refresh(comment)
 
     return comment
+
+
+@router.get("/upcoming-deadlines/all", response_model=List[TaskResponse])
+def get_upcoming_deadlines(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get tasks with deadlines within 2 days, excluding tasks in Review or Done boards.
+    Only returns tasks from projects the user has access to.
+    """
+    today = date.today()
+    deadline_threshold = today + timedelta(days=2)
+
+    # Get all tasks with upcoming deadlines
+    query = db.query(Task).options(
+        joinedload(Task.board).joinedload(Board.project),
+        joinedload(Task.assignee)
+    ).join(Board).filter(
+        Task.due_date.isnot(None),
+        Task.due_date <= deadline_threshold,
+        Task.due_date >= today,
+        Board.name.notin_(["Review", "Done"])
+    )
+
+    # Filter by user access
+    if not can_manage_projects(current_user):
+        # Get projects where user is a member
+        member_projects = db.query(ProjectMember.project_id).filter(
+            ProjectMember.user_id == current_user.id
+        ).subquery()
+
+        query = query.join(Project).filter(
+            Project.id.in_(member_projects)
+        )
+
+    tasks = query.order_by(Task.due_date).all()
+    return tasks
