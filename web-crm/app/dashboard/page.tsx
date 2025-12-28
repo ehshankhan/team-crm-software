@@ -140,7 +140,7 @@ export default function DashboardPage() {
               <div className="p-6">
                 <div className="flex items-center mb-4">
                   <AlertCircle className="h-5 w-5 text-orange-500 mr-2" />
-                  <h2 className="text-lg font-medium text-gray-900">Upcoming Deadlines (Next 2 Days)</h2>
+                  <h2 className="text-lg font-medium text-gray-900">Upcoming Deadlines</h2>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
