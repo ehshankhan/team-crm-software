@@ -210,6 +210,7 @@ export default function ProjectDetailPage() {
         <KanbanBoard
           project={project}
           isMember={isMember}
+          boardTasks={boardTasks}
           onCreateTask={(boardId) => setShowCreateTask(boardId)}
           onTaskClick={(task) => setSelectedTask(task)}
           onRefresh={fetchProject}

@@ -10,6 +10,7 @@ import TaskCard from './TaskCard';
 interface KanbanBoardProps {
   project: Project;
   isMember: boolean;
+  boardTasks: Map<string, Task[]>;
   onCreateTask: (boardId: string) => void;
   onTaskClick: (task: Task) => void;
   onRefresh: () => void;
@@ -23,8 +24,7 @@ interface BoardColumn {
   tasks: Task[];
 }
 
-export default function KanbanBoard({ project, isMember, onCreateTask, onTaskClick, onRefresh, onTasksLoaded }: KanbanBoardProps) {
-  const [boards, setBoards] = useState<BoardColumn[]>([]);
+export default function KanbanBoard({ project, isMember, boardTasks, onCreateTask, onTaskClick, onRefresh, onTasksLoaded }: KanbanBoardProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -34,30 +34,28 @@ export default function KanbanBoard({ project, isMember, onCreateTask, onTaskCli
   const loadBoardsWithTasks = async () => {
     try {
       setLoading(true);
-      const boardsWithTasks: BoardColumn[] = [];
 
       for (const board of project.boards) {
         const response = await api.get<Task[]>(`/boards/${board.id}/tasks`);
         const sortedTasks = response.data.sort((a, b) => a.position - b.position);
 
-        boardsWithTasks.push({
-          id: board.id,
-          name: board.name,
-          color: board.color,
-          tasks: sortedTasks,
-        });
-
         // Notify parent about loaded tasks
         onTasksLoaded(board.id, sortedTasks);
       }
-
-      setBoards(boardsWithTasks);
     } catch (err) {
       console.error('Failed to load boards:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Build boards from parent's boardTasks state
+  const boards: BoardColumn[] = project.boards.map(board => ({
+    id: board.id,
+    name: board.name,
+    color: board.color,
+    tasks: (boardTasks.get(board.id) || []).sort((a, b) => a.position - b.position),
+  }));
 
   return (
     <div className="flex space-x-4 overflow-x-auto pb-4">
