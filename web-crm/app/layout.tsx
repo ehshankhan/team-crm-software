@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "IndoSense - Management System",
-  description: "IndoSense internal team management system",
+  title: "IndoSense LMS",
+  description: "IndoSense Lab Management System - Manage projects, attendance, inventory, and daily activities",
 };
 
 export default function RootLayout({
