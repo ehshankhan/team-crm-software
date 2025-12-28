@@ -8,6 +8,7 @@ class Permission:
     SUPER_ADMIN = "super_admin"
     MANAGER = "manager"
     EMPLOYEE = "employee"
+    STUDENT = "student"
 
 
 def check_user_role(user: User, allowed_roles: List[str]) -> bool:

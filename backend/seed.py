@@ -46,6 +46,15 @@ def seed_database():
                         "view_projects": True,
                         "use_inventory": True
                     }
+                },
+                {
+                    "name": "student",
+                    "permissions": {
+                        "view_own": True,
+                        "mark_attendance": True,
+                        "view_projects": True,
+                        "use_inventory": True
+                    }
                 }
             ]
 
