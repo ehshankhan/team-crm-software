@@ -105,20 +105,20 @@ export default function ProjectsPage() {
               className="bg-white overflow-hidden shadow rounded-lg hover:shadow-lg transition-shadow cursor-pointer"
             >
               <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FolderKanban className="h-6 w-6 text-blue-600" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center flex-1 min-w-0 mr-3">
+                    <FolderKanban className="h-6 w-6 text-blue-600 flex-shrink-0" />
                     <h3 className="ml-3 text-lg font-medium text-gray-900 truncate">
                       {project.name}
                     </h3>
                   </div>
-                  <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(project.status)}`}>
+                  <span className={`px-2 py-1 text-xs font-semibold rounded-full flex-shrink-0 ${getStatusColor(project.status)}`}>
                     {project.status}
                   </span>
                 </div>
 
                 {project.description && (
-                  <p className="mt-3 text-sm text-gray-500 line-clamp-2">
+                  <p className="text-sm text-gray-500 line-clamp-2 break-words">
                     {project.description}
                   </p>
                 )}

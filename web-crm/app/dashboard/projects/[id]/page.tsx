@@ -6,13 +6,14 @@ import { api } from '@/lib/api';
 import { Project, Task } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { ArrowLeft, Plus, Users, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Trash2, Edit } from 'lucide-react';
 import Link from 'next/link';
 import KanbanBoard from '@/components/projects/KanbanBoard';
 import TaskCard from '@/components/projects/TaskCard';
 import CreateTaskModal from '@/components/projects/CreateTaskModal';
 import TaskDetailModal from '@/components/projects/TaskDetailModal';
 import ProjectMembersModal from '@/components/projects/ProjectMembersModal';
+import EditProjectModal from '@/components/projects/EditProjectModal';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -25,6 +26,7 @@ export default function ProjectDetailPage() {
   const [showCreateTask, setShowCreateTask] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [showEditProject, setShowEditProject] = useState(false);
   const [boardTasks, setBoardTasks] = useState<Map<string, Task[]>>(new Map());
 
   // Check if user is a project member or admin/manager
@@ -208,13 +210,22 @@ export default function ProjectDetailPage() {
           </div>
           <div className="flex items-center space-x-3">
             {canManage && (
-              <button
-                onClick={() => setShowMembers(true)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Members ({project.members?.length || 0})
-              </button>
+              <>
+                <button
+                  onClick={() => setShowEditProject(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Project
+                </button>
+                <button
+                  onClick={() => setShowMembers(true)}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Members ({project.members?.length || 0})
+                </button>
+              </>
             )}
             {isAdmin && (
               <button
@@ -271,6 +282,17 @@ export default function ProjectDetailPage() {
           project={project}
           onClose={() => setShowMembers(false)}
           onUpdate={fetchProject}
+        />
+      )}
+
+      {showEditProject && project && (
+        <EditProjectModal
+          project={project}
+          onClose={() => setShowEditProject(false)}
+          onSuccess={() => {
+            setShowEditProject(false);
+            fetchProject();
+          }}
         />
       )}
     </div>
