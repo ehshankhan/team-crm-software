@@ -425,7 +425,7 @@ def stock_out(
         item_id=item_id,
         user_id=current_user.id,
         action="stock_out",
-        quantity_change=stock_data.quantity,
+        quantity_change=-stock_data.quantity,  # Negative for stock out
         quantity_before=quantity_before,
         quantity_after=quantity_after,
         reason=stock_data.reason
