@@ -67,7 +67,7 @@ class InventoryItemBase(BaseModel):
     description: Optional[str] = None
     category_id: Optional[UUID] = None
     sku: Optional[str] = None
-    unit: str = "pcs"
+    unit: Optional[str] = "pcs"
     location: Optional[str] = None
     min_threshold: int = 0
     unit_price: Optional[Decimal] = None
