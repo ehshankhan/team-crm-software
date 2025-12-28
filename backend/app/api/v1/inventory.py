@@ -393,10 +393,9 @@ def stock_out(
     Remove stock from an inventory item.
 
     Creates a transaction record and updates item quantity.
+    All users (including employees) can stock out items.
     """
-    # Check permissions
-    require_role(current_user, [Permission.SUPER_ADMIN, Permission.MANAGER])
-
+    # All authenticated users can stock out
     item = db.query(InventoryItem).filter(InventoryItem.id == item_id).first()
 
     if not item:

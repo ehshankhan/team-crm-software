@@ -231,9 +231,6 @@ export default function InventoryPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Quantity
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Category
-                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                     Actions
                   </th>
@@ -267,11 +264,9 @@ export default function InventoryPage() {
                           Min: {item.min_threshold}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {getCategoryName(item.category_id)}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
+                          {/* Everyone can view transaction history */}
                           <button
                             onClick={() => setHistoryItem(item)}
                             className="text-gray-600 hover:text-gray-900"
@@ -279,6 +274,17 @@ export default function InventoryPage() {
                           >
                             <History className="h-4 w-4" />
                           </button>
+
+                          {/* Everyone can stock out */}
+                          <button
+                            onClick={() => setStockItem({ item, type: 'out' })}
+                            className="text-orange-600 hover:text-orange-900"
+                            title="Stock out"
+                          >
+                            <ArrowDownCircle className="h-4 w-4" />
+                          </button>
+
+                          {/* Only managers and admins can stock in, edit, and delete */}
                           {canManage && (
                             <>
                               <button
@@ -287,13 +293,6 @@ export default function InventoryPage() {
                                 title="Stock in"
                               >
                                 <ArrowUpCircle className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => setStockItem({ item, type: 'out' })}
-                                className="text-orange-600 hover:text-orange-900"
-                                title="Stock out"
-                              >
-                                <ArrowDownCircle className="h-4 w-4" />
                               </button>
                               <button
                                 onClick={() => setEditingItem(item)}
