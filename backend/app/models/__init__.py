@@ -3,6 +3,7 @@ from app.models.attendance import Attendance
 from app.models.timesheet import Timesheet
 from app.models.project import Project, ProjectMember, Board, Task, TaskComment
 from app.models.inventory import InventoryCategory, InventoryItem, InventoryTransaction
+from app.models.daily_log import DailyLog
 
 __all__ = [
     "Role",
@@ -17,4 +18,5 @@ __all__ = [
     "InventoryCategory",
     "InventoryItem",
     "InventoryTransaction",
+    "DailyLog",
 ]

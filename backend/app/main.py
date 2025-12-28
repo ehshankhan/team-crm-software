@@ -45,7 +45,7 @@ def health_check():
     return {"status": "healthy"}
 
 
-# Create tables (for development only - use Alembic in production)
-# @app.on_event("startup")
-# def on_startup():
-#     Base.metadata.create_all(bind=engine)
+# Create tables on startup
+@app.on_event("startup")
+def on_startup():
+    Base.metadata.create_all(bind=engine)
