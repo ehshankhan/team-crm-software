@@ -5,6 +5,24 @@ from uuid import UUID
 from decimal import Decimal
 
 
+# Nested schemas for user and project
+class UserInLog(BaseModel):
+    id: UUID
+    full_name: str
+    email: str
+
+    class Config:
+        from_attributes = True
+
+
+class ProjectInLog(BaseModel):
+    id: UUID
+    name: str
+
+    class Config:
+        from_attributes = True
+
+
 class DailyLogBase(BaseModel):
     activity: str
     hours_spent: Optional[Decimal] = None
@@ -30,8 +48,8 @@ class DailyLogResponse(DailyLogBase):
     date: date
     created_at: datetime
     updated_at: datetime
-    user: Optional[dict] = None  # Will include user details
-    project: Optional[dict] = None  # Will include project details
+    user: Optional[UserInLog] = None
+    project: Optional[ProjectInLog] = None
 
     class Config:
         from_attributes = True
