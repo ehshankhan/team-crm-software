@@ -444,7 +444,7 @@ export default function DailyLogPage() {
               Total Entries: {displayLogs.length}
             </span>
             <span className="text-sm font-medium text-blue-900">
-              Total Hours: {displayLogs.reduce((sum, log) => sum + (log.hours_spent || 0), 0).toFixed(1)}h
+              Total Hours: {displayLogs.reduce((sum, log) => sum + (parseFloat(log.hours_spent as any) || 0), 0).toFixed(1)}h
             </span>
           </div>
         </div>
