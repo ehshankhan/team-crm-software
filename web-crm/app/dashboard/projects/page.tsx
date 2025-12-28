@@ -136,13 +136,6 @@ export default function ProjectsPage() {
                     <Users className="h-4 w-4 mr-2" />
                     <span>{project.members?.length || 0} members</span>
                   </div>
-
-                  {project.boards && (
-                    <div className="flex items-center text-sm text-gray-500">
-                      <FolderKanban className="h-4 w-4 mr-2" />
-                      <span>{project.boards.length} boards</span>
-                    </div>
-                  )}
                 </div>
               </div>
 

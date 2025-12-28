@@ -6,7 +6,7 @@ import { api } from '@/lib/api';
 import { Project, Task } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { ArrowLeft, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import KanbanBoard from '@/components/projects/KanbanBoard';
 import TaskCard from '@/components/projects/TaskCard';
@@ -29,6 +29,7 @@ export default function ProjectDetailPage() {
 
   // Check if user is a project member or admin/manager
   const canManage = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
+  const isAdmin = user?.role?.name === 'super_admin';
   const isMember = canManage || project?.members?.some(m => m.user_id === user?.id) || false;
 
   const sensors = useSensors(
@@ -151,6 +152,21 @@ export default function ProjectDetailPage() {
     fetchProject();
   };
 
+  const handleDeleteProject = async () => {
+    if (!project) return;
+
+    const confirmMessage = `Are you sure you want to delete "${project.name}"?\n\nThis will archive the project and it won't be visible in the project list.`;
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      await api.delete(`/projects/${project.id}`);
+      // Redirect to projects page
+      window.location.href = '/dashboard/projects';
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete project');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -190,15 +206,26 @@ export default function ProjectDetailPage() {
               <p className="mt-2 text-sm text-gray-600">{project.description}</p>
             )}
           </div>
-          {canManage && (
-            <button
-              onClick={() => setShowMembers(true)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-            >
-              <Users className="h-4 w-4 mr-2" />
-              Members ({project.members?.length || 0})
-            </button>
-          )}
+          <div className="flex items-center space-x-3">
+            {canManage && (
+              <button
+                onClick={() => setShowMembers(true)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                Members ({project.members?.length || 0})
+              </button>
+            )}
+            {isAdmin && (
+              <button
+                onClick={handleDeleteProject}
+                className="inline-flex items-center px-4 py-2 border border-red-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Project
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
