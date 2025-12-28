@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { InventoryItem, InventoryCategory } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Package, Plus, TrendingDown, Edit, Trash2, ArrowUpCircle, ArrowDownCircle, History } from 'lucide-react';
+import { Package, Plus, TrendingDown, Edit, Trash2, ArrowUpCircle, ArrowDownCircle, History, Search } from 'lucide-react';
 import CreateItemModal from '@/components/inventory/CreateItemModal';
 import EditItemModal from '@/components/inventory/EditItemModal';
 import StockModal from '@/components/inventory/StockModal';
@@ -18,6 +18,7 @@ export default function InventoryPage() {
   const [lowStockItems, setLowStockItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [showCreateItem, setShowCreateItem] = useState(false);
   const [showCreateCategory, setShowCreateCategory] = useState(false);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
@@ -86,6 +87,20 @@ export default function InventoryPage() {
     return category?.name || 'Unknown';
   };
 
+  // Filter items based on search query
+  const filteredItems = items.filter(item => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      item.description?.toLowerCase().includes(query) ||
+      item.sku?.toLowerCase().includes(query) ||
+      item.supplier?.toLowerCase().includes(query) ||
+      getCategoryName(item.category_id).toLowerCase().includes(query)
+    );
+  });
+
   return (
     <div>
       <div className="sm:flex sm:items-center sm:justify-between">
@@ -145,31 +160,65 @@ export default function InventoryPage() {
 
       {/* Filters */}
       <div className="mt-6 bg-white shadow rounded-lg p-4">
-        <div className="flex items-center space-x-4">
-          <label className="text-sm font-medium text-gray-700">Category:</label>
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border"
-          >
-            <option value="all">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Search Bar */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search by name, SKU, supplier, category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center space-x-4">
+            <label className="text-sm font-medium text-gray-700">Category:</label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm px-3 py-2 border flex-1"
+            >
+              <option value="all">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
+        {/* Search Results Counter */}
+        {searchQuery && (
+          <div className="mt-3 text-sm text-gray-600">
+            Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} matching "{searchQuery}"
+          </div>
+        )}
       </div>
 
       {/* Inventory Table */}
       <div className="mt-6 bg-white shadow rounded-lg overflow-hidden">
         {loading ? (
           <div className="p-6 text-center text-gray-600">Loading inventory...</div>
-        ) : items.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="p-6 text-center">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
-            <p className="mt-2 text-sm text-gray-500">No items in inventory</p>
+            <p className="mt-2 text-sm text-gray-500">
+              {searchQuery ? `No items found matching "${searchQuery}"` : 'No items in inventory'}
+            </p>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+              >
+                Clear search
+              </button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -200,7 +249,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item) => {
+                {filteredItems.map((item) => {
                   const isLowStock = item.quantity < item.min_threshold;
                   return (
                     <tr key={item.id} className={isLowStock ? 'bg-red-50' : ''}>
