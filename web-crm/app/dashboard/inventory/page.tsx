@@ -229,19 +229,10 @@ export default function InventoryPage() {
                     Item Name
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    SKU
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                     Quantity
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Location
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Price
+                    Category
                   </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
                     Actions
@@ -253,26 +244,20 @@ export default function InventoryPage() {
                   const isLowStock = item.quantity < item.min_threshold;
                   return (
                     <tr key={item.id} className={isLowStock ? 'bg-red-50' : ''}>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-6 py-4">
                         <div>
                           <div className="text-sm font-medium text-gray-900">{item.name}</div>
                           {item.description && (
-                            <div className="text-xs text-gray-500 truncate max-w-xs">
+                            <div className="text-xs text-gray-500 truncate max-w-md">
                               {item.description}
                             </div>
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {getCategoryName(item.category_id)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.sku || '-'}
-                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <span className={`text-sm font-semibold ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
-                            {item.quantity} {item.unit}
+                            {item.quantity} {item.unit || 'pcs'}
                           </span>
                           {isLowStock && (
                             <TrendingDown className="h-4 w-4 ml-2 text-red-500" />
@@ -282,11 +267,8 @@ export default function InventoryPage() {
                           Min: {item.min_threshold}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.location || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.unit_price ? `$${item.unit_price}` : '-'}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {getCategoryName(item.category_id)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <div className="flex justify-end space-x-2">
