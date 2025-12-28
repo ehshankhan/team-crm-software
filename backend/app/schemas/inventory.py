@@ -8,7 +8,7 @@ from decimal import Decimal
 # User schema for nested relations
 class UserBasic(BaseModel):
     id: UUID
-    username: str
+    full_name: str
     email: str
 
     class Config:

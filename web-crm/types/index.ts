@@ -179,7 +179,7 @@ export interface InventoryTransaction {
   user_id: string;
   user?: {
     id: string;
-    username: string;
+    full_name: string;
     email: string;
   };
   action: 'stock_in' | 'stock_out';
