@@ -172,22 +172,18 @@ def update_project(
 
 
 @router.delete("/{project_id}", status_code=status.HTTP_200_OK)
-def archive_project(
+def delete_project(
     project_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Archive a project (sets status to 'archived').
+    Permanently delete a project (admin only).
 
-    Doesn't delete the project, just marks it as archived.
+    Deletes the project and all associated data (boards, tasks, members).
     """
-    # Check permissions
-    if not can_manage_projects(current_user):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only managers and admins can archive projects"
-        )
+    # Check permissions - only super admin can delete
+    require_role(current_user, [Permission.SUPER_ADMIN])
 
     project = db.query(Project).filter(Project.id == project_id).first()
 
@@ -197,10 +193,11 @@ def archive_project(
             detail="Project not found"
         )
 
-    project.status = "archived"
+    # Delete project (cascade will handle boards, tasks, members, etc.)
+    db.delete(project)
     db.commit()
 
-    return {"message": "Project archived successfully"}
+    return {"message": "Project deleted successfully"}
 
 
 # ==================== PROJECT MEMBER ENDPOINTS ====================

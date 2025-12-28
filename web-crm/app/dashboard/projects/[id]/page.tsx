@@ -155,7 +155,7 @@ export default function ProjectDetailPage() {
   const handleDeleteProject = async () => {
     if (!project) return;
 
-    const confirmMessage = `Are you sure you want to delete "${project.name}"?\n\nThis will archive the project and it won't be visible in the project list.`;
+    const confirmMessage = `Are you sure you want to PERMANENTLY delete "${project.name}"?\n\nThis will delete:\n- The project\n- All boards\n- All tasks\n- All comments\n\nThis action CANNOT be undone!`;
     if (!confirm(confirmMessage)) return;
 
     try {
