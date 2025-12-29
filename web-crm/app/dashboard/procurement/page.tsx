@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { cache } from '@/lib/cache';
+import { useAuthStore } from '@/store/authStore';
 import { Package, Copy, Trash2, CheckCircle, Send, Filter } from 'lucide-react';
 
 const CACHE_KEY_ITEMS = 'procurement_items';
@@ -44,6 +45,7 @@ const VENDOR_OPTIONS = [
 const PRIORITY_OPTIONS = ['low', 'medium', 'high', 'urgent'];
 
 export default function ProcurementPage() {
+  const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'procurement' | 'non-gem'>('procurement');
   const [items, setItems] = useState<ProcurementItem[]>([]);
   const [nonGemItems, setNonGemItems] = useState<ProcurementItem[]>([]);
@@ -514,23 +516,30 @@ export default function ProcurementPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  <select
-                    value={selectedCategoryId}
-                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="">Select Category</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => handleMarkAsReceived(item.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                  >
-                    <CheckCircle size={16} />
-                    Received
-                  </button>
+                  {/* Only show Received button to requester, manager, or admin */}
+                  {(item.requester?.id === user?.id ||
+                    user?.role?.name === 'super_admin' ||
+                    user?.role?.name === 'manager') && (
+                    <>
+                      <select
+                        value={selectedCategoryId}
+                        onChange={(e) => setSelectedCategoryId(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+                      >
+                        <option value="">Select Category</option>
+                        {categories.map(cat => (
+                          <option key={cat.id} value={cat.id}>{cat.name}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => handleMarkAsReceived(item.id)}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                      >
+                        <CheckCircle size={16} />
+                        Received
+                      </button>
+                    </>
+                  )}
                   {!item.is_non_gem && (
                     <button
                       onClick={() => handleExportToNonGem(item.id)}
