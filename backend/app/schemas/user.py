@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, Dict, Any, List
-from datetime import datetime
+from datetime import datetime, date
 from uuid import UUID
 
 
@@ -53,6 +53,8 @@ class UserResponse(UserBase):
     role: Optional[RoleResponse] = None
     project_count: Optional[int] = 0
     project_names: Optional[List[str]] = []
+    current_leave_start: Optional[date] = None
+    current_leave_end: Optional[date] = None
 
     class Config:
         from_attributes = True

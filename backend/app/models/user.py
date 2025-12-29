@@ -45,3 +45,4 @@ class User(Base):
     approved_timesheets = relationship("Timesheet", back_populates="approver", foreign_keys="Timesheet.approved_by")
     daily_logs = relationship("DailyLog", back_populates="user", cascade="all, delete-orphan")
     procurement_requests = relationship("ProcurementItem", back_populates="requester", cascade="all, delete-orphan")
+    leaves = relationship("Leave", back_populates="user", foreign_keys="Leave.user_id", cascade="all, delete-orphan")

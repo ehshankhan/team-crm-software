@@ -5,7 +5,8 @@ import { api } from '@/lib/api';
 import { cache } from '@/lib/cache';
 import { User } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { Plus, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
+import { Plus, Edit, Trash2, UserCheck, UserX, Plane } from 'lucide-react';
+import { format } from 'date-fns';
 import CreateUserModal from '@/components/users/CreateUserModal';
 import EditUserModal from '@/components/users/EditUserModal';
 import DeleteUserModal from '@/components/users/DeleteUserModal';
@@ -192,7 +193,17 @@ export default function UsersPage() {
                         </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {user.is_active ? (
+                        {user.current_leave_start && user.current_leave_end ? (
+                          <div className="flex flex-col">
+                            <span className="inline-flex items-center text-orange-700 font-medium">
+                              <Plane className="h-4 w-4 mr-1" />
+                              On Leave
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5">
+                              {format(new Date(user.current_leave_start), 'MMM dd')} - {format(new Date(user.current_leave_end), 'MMM dd, yyyy')}
+                            </span>
+                          </div>
+                        ) : user.is_active ? (
                           <span className="inline-flex items-center text-green-700">
                             <UserCheck className="h-4 w-4 mr-1" />
                             Active

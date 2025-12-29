@@ -37,11 +37,15 @@ def list_users(
     """
     # Get users with project count and names
     from app.models.project import ProjectMember, Project
+    from app.models.leave import Leave, LeaveStatus
     from sqlalchemy import func
+    from datetime import date
 
     users = db.query(User).offset(skip).limit(limit).all()
 
-    # Add project count and names to each user
+    today = date.today()
+
+    # Add project count, names, and current leave info to each user
     for user in users:
         # Get project memberships with project details
         memberships = db.query(ProjectMember).filter(
@@ -57,6 +61,21 @@ def list_users(
 
         user.project_count = len(project_names)
         user.project_names = project_names
+
+        # Check if user is currently on leave
+        current_leave = db.query(Leave).filter(
+            Leave.user_id == user.id,
+            Leave.status == LeaveStatus.APPROVED,
+            Leave.start_date <= today,
+            Leave.end_date >= today
+        ).first()
+
+        if current_leave:
+            user.current_leave_start = current_leave.start_date
+            user.current_leave_end = current_leave.end_date
+        else:
+            user.current_leave_start = None
+            user.current_leave_end = None
 
     return users
 

@@ -9,6 +9,8 @@ export interface User {
   role?: Role;
   project_count?: number;
   project_names?: string[];
+  current_leave_start?: string | null;
+  current_leave_end?: string | null;
 }
 
 export interface Role {
@@ -51,6 +53,43 @@ export interface CheckInRequest {
 export interface CheckOutRequest {
   latitude: number;
   longitude: number;
+}
+
+// Leave types
+export interface Leave {
+  id: string;
+  user_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  approved_by_id: string | null;
+  approved_at: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+  updated_at: string;
+  user?: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+  approved_by?: {
+    id: string;
+    full_name: string;
+    email: string;
+  };
+}
+
+export interface LeaveCreate {
+  start_date: string;
+  end_date: string;
+  reason?: string;
+}
+
+export interface LeaveUpdate {
+  start_date?: string;
+  end_date?: string;
+  reason?: string;
 }
 
 // Timesheet types
