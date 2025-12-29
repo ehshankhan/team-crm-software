@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Lab Location (for GPS validation)
     LAB_LATITUDE: float = 28.5398
     LAB_LONGITUDE: float = 77.1866
-    LAB_RADIUS_METERS: int = 500
+    LAB_RADIUS_METERS: int = 1000
 
     # App
     DEBUG: bool = True
