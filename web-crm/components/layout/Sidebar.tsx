@@ -17,7 +17,7 @@ import {
 
 const navigationItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Users', href: '/dashboard/users', icon: Users, roles: ['super_admin'] },
+  { name: 'Users', href: '/dashboard/users', icon: Users },
   { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
   { name: 'Timesheets', href: '/dashboard/timesheets', icon: FileText },
   { name: 'Daily Tracker', href: '/dashboard/daily-log', icon: ClipboardList },
