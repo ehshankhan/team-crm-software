@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { Package, Copy, Trash2, CheckCircle, Send, Filter } from 'lucide-react';
+
+const CACHE_KEY_ITEMS = 'procurement_items';
+const CACHE_KEY_NON_GEM = 'procurement_non_gem';
+const CACHE_KEY_CATEGORIES = 'procurement_categories';
 
 interface ProcurementItem {
   id: string;
@@ -62,12 +67,26 @@ export default function ProcurementPage() {
   const [filterPriority, setFilterPriority] = useState('');
 
   useEffect(() => {
-    fetchData();
+    // Load from cache immediately
+    const cachedItems = cache.get<ProcurementItem[]>(CACHE_KEY_ITEMS);
+    const cachedNonGem = cache.get<ProcurementItem[]>(CACHE_KEY_NON_GEM);
+    const cachedCategories = cache.get<InventoryCategory[]>(CACHE_KEY_CATEGORIES);
+
+    if (cachedItems) setItems(cachedItems);
+    if (cachedNonGem) setNonGemItems(cachedNonGem);
+    if (cachedCategories) setCategories(cachedCategories);
+
+    // Only show loading if no cache
+    if (cachedItems && cachedNonGem && cachedCategories) {
+      setLoading(false);
+    }
+
+    fetchData(!(cachedItems && cachedNonGem && cachedCategories));
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const [itemsRes, nonGemRes, categoriesRes] = await Promise.all([
         api.get<ProcurementItem[]>('/procurement/'),
         api.get<ProcurementItem[]>('/procurement/non-gem'),
@@ -76,10 +95,15 @@ export default function ProcurementPage() {
       setItems(itemsRes.data);
       setNonGemItems(nonGemRes.data);
       setCategories(categoriesRes.data);
+
+      // Update cache
+      cache.set(CACHE_KEY_ITEMS, itemsRes.data);
+      cache.set(CACHE_KEY_NON_GEM, nonGemRes.data);
+      cache.set(CACHE_KEY_CATEGORIES, categoriesRes.data);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

@@ -4,7 +4,11 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { Users, Clock, FolderKanban, Package, AlertCircle, Calendar } from 'lucide-react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { format } from 'date-fns';
+
+const CACHE_KEY_STATS = 'dashboard_stats';
+const CACHE_KEY_DEADLINES = 'dashboard_deadlines';
 
 interface DashboardStats {
   total_users: number;
@@ -44,24 +48,43 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardData();
+    // Load from cache immediately
+    const cachedStats = cache.get<DashboardStats>(CACHE_KEY_STATS);
+    const cachedDeadlines = cache.get<DeadlineTask[]>(CACHE_KEY_DEADLINES);
+
+    if (cachedStats) {
+      setStats(cachedStats);
+    }
+    if (cachedDeadlines) {
+      setDeadlines(cachedDeadlines);
+    }
+
+    // Only show loading if no cache
+    if (cachedStats && cachedDeadlines) {
+      setLoading(false);
+    }
+
+    // Fetch fresh data in background
+    fetchDashboardData(!(cachedStats && cachedDeadlines));
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
 
       // Fetch stats
       const statsResponse = await api.get<DashboardStats>('/dashboard/stats');
       setStats(statsResponse.data);
+      cache.set(CACHE_KEY_STATS, statsResponse.data);
 
       // Fetch upcoming deadlines
       const deadlineResponse = await api.get<DeadlineTask[]>('/tasks/upcoming-deadlines/all');
       setDeadlines(deadlineResponse.data);
+      cache.set(CACHE_KEY_DEADLINES, deadlineResponse.data);
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

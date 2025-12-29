@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { Attendance } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { Clock, MapPin, Calendar, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import AttendanceHistory from '@/components/attendance/AttendanceHistory';
 import AllUsersAttendance from '@/components/attendance/AllUsersAttendance';
+
+const CACHE_KEY_TODAY = 'attendance_today';
 
 export default function AttendancePage() {
   const { user } = useAuthStore();
@@ -20,6 +23,12 @@ export default function AttendancePage() {
   const isAdmin = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
 
   useEffect(() => {
+    // Load from cache immediately
+    const cached = cache.get<Attendance>(CACHE_KEY_TODAY);
+    if (cached) {
+      setTodayAttendance(cached);
+    }
+
     fetchTodayAttendance();
     getCurrentLocation();
   }, []);
@@ -47,6 +56,7 @@ export default function AttendancePage() {
     try {
       const response = await api.get<Attendance>('/attendance/today');
       setTodayAttendance(response.data);
+      cache.set(CACHE_KEY_TODAY, response.data);
     } catch (err: any) {
       if (err.response?.status !== 404) {
         console.error('Failed to fetch today attendance:', err);
@@ -69,6 +79,7 @@ export default function AttendancePage() {
         longitude: currentLocation.lng,
       });
       setTodayAttendance(response.data);
+      cache.set(CACHE_KEY_TODAY, response.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to check in');
     } finally {
@@ -91,6 +102,7 @@ export default function AttendancePage() {
         longitude: currentLocation.lng,
       });
       setTodayAttendance(response.data);
+      cache.set(CACHE_KEY_TODAY, response.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to check out');
     } finally {

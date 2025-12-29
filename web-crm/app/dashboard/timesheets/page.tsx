@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { Timesheet } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { format, startOfMonth, endOfMonth } from 'date-fns';
 import { FileText, Clock, CheckCircle, XCircle, AlertCircle, Edit } from 'lucide-react';
 import EditTimesheetModal from '@/components/timesheets/EditTimesheetModal';
 import ApproveRejectModal from '@/components/timesheets/ApproveRejectModal';
+
+const CACHE_KEY_TIMESHEETS = 'timesheets_list';
 
 export default function TimesheetsPage() {
   const { user } = useAuthStore();
@@ -23,12 +26,23 @@ export default function TimesheetsPage() {
   const isManager = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
 
   useEffect(() => {
-    fetchTimesheets();
+    // Generate cache key based on filters
+    const cacheKey = `${CACHE_KEY_TIMESHEETS}_${viewMode}_${startDate}_${endDate}_${statusFilter}`;
+
+    // Load from cache immediately
+    const cached = cache.get<Timesheet[]>(cacheKey);
+    if (cached) {
+      setTimesheets(cached);
+      setLoading(false);
+    }
+
+    // Fetch fresh data (show loading only if no cache)
+    fetchTimesheets(!cached);
   }, [startDate, endDate, statusFilter, viewMode]);
 
-  const fetchTimesheets = async () => {
+  const fetchTimesheets = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const endpoint = viewMode === 'my' ? '/timesheets/me' : '/timesheets/';
 
       const params: any = {
@@ -42,10 +56,14 @@ export default function TimesheetsPage() {
 
       const response = await api.get<Timesheet[]>(endpoint, { params });
       setTimesheets(response.data);
+
+      // Cache with filter-specific key
+      const cacheKey = `${CACHE_KEY_TIMESHEETS}_${viewMode}_${startDate}_${endDate}_${statusFilter}`;
+      cache.set(cacheKey, response.data);
     } catch (err) {
       console.error('Failed to fetch timesheets:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 

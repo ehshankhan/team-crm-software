@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { useAuthStore } from '@/store/authStore';
 import { Plus, Trash2, Edit2, Calendar, Clock, FolderKanban } from 'lucide-react';
 import { format } from 'date-fns';
+
+const CACHE_KEY_PROJECTS = 'daily_log_projects';
+const CACHE_KEY_MY_LOGS = 'daily_log_my_logs';
+const CACHE_KEY_TEAM_LOGS = 'daily_log_team_logs';
 
 interface DailyLog {
   id: string;
@@ -52,6 +57,12 @@ export default function DailyLogPage() {
   const today = format(new Date(), 'yyyy-MM-dd');
 
   useEffect(() => {
+    // Load projects from cache immediately
+    const cachedProjects = cache.get<Project[]>(CACHE_KEY_PROJECTS);
+    if (cachedProjects) {
+      setProjects(cachedProjects);
+    }
+
     fetchProjects();
     fetchMyLogs();
     fetchTeamLogs();
@@ -59,8 +70,20 @@ export default function DailyLogPage() {
 
   useEffect(() => {
     if (activeTab === 'my-logs') {
+      // Load my logs from cache
+      const cached = cache.get<DailyLog[]>(`${CACHE_KEY_MY_LOGS}_${selectedDate}`);
+      if (cached) {
+        setMyLogs(cached);
+        setLoading(false);
+      }
       fetchMyLogs();
     } else {
+      // Load team logs from cache
+      const cached = cache.get<DailyLog[]>(`${CACHE_KEY_TEAM_LOGS}_${selectedDate}`);
+      if (cached) {
+        setTeamLogs(cached);
+        setLoading(false);
+      }
       fetchTeamLogs();
     }
   }, [selectedDate, activeTab]);
@@ -69,6 +92,7 @@ export default function DailyLogPage() {
     try {
       const response = await api.get<Project[]>('/projects/');
       setProjects(response.data);
+      cache.set(CACHE_KEY_PROJECTS, response.data);
     } catch (err) {
       console.error('Failed to fetch projects:', err);
     }
@@ -84,6 +108,7 @@ export default function DailyLogPage() {
         },
       });
       setMyLogs(response.data);
+      cache.set(`${CACHE_KEY_MY_LOGS}_${selectedDate}`, response.data);
     } catch (err) {
       console.error('Failed to fetch my logs:', err);
     } finally {
@@ -100,6 +125,7 @@ export default function DailyLogPage() {
         },
       });
       setTeamLogs(response.data);
+      cache.set(`${CACHE_KEY_TEAM_LOGS}_${selectedDate}`, response.data);
     } catch (err) {
       console.error('Failed to fetch team logs:', err);
     } finally {
