@@ -71,6 +71,21 @@ export default function InventoryPage() {
     fetchLowStock();
   };
 
+  const handleStockUpdate = (itemId: string, newQuantity: number) => {
+    // Update the item quantity in local state without refetching
+    setItems(prevItems =>
+      prevItems.map(item =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+
+    // Update low stock items list
+    fetchLowStock();
+
+    // Close the stock modal
+    setStockItem(null);
+  };
+
   const handleDeleteItem = async (item: InventoryItem) => {
     if (!confirm(`Are you sure you want to delete "${item.name}"?`)) return;
 
@@ -385,10 +400,7 @@ export default function InventoryPage() {
           item={stockItem.item}
           type={stockItem.type}
           onClose={() => setStockItem(null)}
-          onSuccess={() => {
-            setStockItem(null);
-            handleRefresh();
-          }}
+          onSuccess={(newQuantity) => handleStockUpdate(stockItem.item.id, newQuantity)}
         />
       )}
 

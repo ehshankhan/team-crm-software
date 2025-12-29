@@ -9,7 +9,7 @@ interface StockModalProps {
   item: InventoryItem;
   type: 'in' | 'out';
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (newQuantity: number) => void;
 }
 
 export default function StockModal({ item, type, onClose, onSuccess }: StockModalProps) {
@@ -38,11 +38,12 @@ export default function StockModal({ item, type, onClose, onSuccess }: StockModa
 
     try {
       const endpoint = type === 'in' ? 'stock-in' : 'stock-out';
-      await api.post(`/inventory/${item.id}/${endpoint}`, {
+      const response = await api.post(`/inventory/${item.id}/${endpoint}`, {
         quantity: formData.quantity,
         reason: formData.reason || undefined,
       });
-      onSuccess();
+      // Pass the new quantity from the transaction response
+      onSuccess(response.data.quantity_after);
     } catch (err: any) {
       setError(err.response?.data?.detail || `Failed to ${type === 'in' ? 'add' : 'remove'} stock`);
     } finally {
