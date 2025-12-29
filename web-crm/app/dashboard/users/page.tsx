@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { User } from '@/types';
 import { Plus, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import CreateUserModal from '@/components/users/CreateUserModal';
 import EditUserModal from '@/components/users/EditUserModal';
 import DeleteUserModal from '@/components/users/DeleteUserModal';
+
+const CACHE_KEY = 'users_list';
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -16,42 +19,65 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
-  const fetchUsers = async () => {
+  const fetchUsers = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await api.get<User[]>('/users/');
       setUsers(response.data);
+      cache.set(CACHE_KEY, response.data);
       setError(null);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to fetch users');
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUsers();
+    // Load from cache immediately (instant display)
+    const cached = cache.get<User[]>(CACHE_KEY);
+    if (cached) {
+      setUsers(cached);
+      setLoading(false);
+    }
+
+    // Fetch fresh data in background
+    if (cache.isStale(CACHE_KEY) || !cached) {
+      fetchUsers(!cached); // Only show loading if no cache
+    } else {
+      fetchUsers(false); // Silent refresh in background
+    }
   }, []);
 
   const handleUserCreated = (newUser: User) => {
     // Add new user to the list without refetching
-    setUsers(prevUsers => [...prevUsers, newUser]);
+    setUsers(prevUsers => {
+      const newList = [...prevUsers, newUser];
+      cache.set(CACHE_KEY, newList);
+      return newList;
+    });
     setShowCreateModal(false);
   };
 
   const handleUserUpdated = (updatedUser: User) => {
     // Update user in the list without refetching
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
+    setUsers(prevUsers => {
+      const newList = prevUsers.map(user =>
         user.id === updatedUser.id ? updatedUser : user
-      )
-    );
+      );
+      cache.set(CACHE_KEY, newList);
+      return newList;
+    });
     setEditingUser(null);
   };
 
   const handleUserDeleted = (userId: string) => {
     // Remove user from the list without refetching
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+    setUsers(prevUsers => {
+      const newList = prevUsers.filter(user => user.id !== userId);
+      cache.set(CACHE_KEY, newList);
+      return newList;
+    });
     setDeletingUser(null);
   };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { InventoryItem, InventoryCategory } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { Package, Plus, TrendingDown, Edit, Trash2, ArrowUpCircle, ArrowDownCircle, History, Search } from 'lucide-react';
@@ -10,6 +11,9 @@ import EditItemModal from '@/components/inventory/EditItemModal';
 import StockModal from '@/components/inventory/StockModal';
 import CategoryModal from '@/components/inventory/CategoryModal';
 import TransactionHistoryModal from '@/components/inventory/TransactionHistoryModal';
+
+const CACHE_KEY_ITEMS = 'inventory_items';
+const CACHE_KEY_CATEGORIES = 'inventory_categories';
 
 export default function InventoryPage() {
   const { user } = useAuthStore();
@@ -30,6 +34,12 @@ export default function InventoryPage() {
   const isAdmin = user?.role?.name === 'super_admin';
 
   useEffect(() => {
+    // Load categories from cache first
+    const cachedCategories = cache.get<InventoryCategory[]>(CACHE_KEY_CATEGORIES);
+    if (cachedCategories) {
+      setCategories(cachedCategories);
+    }
+
     fetchCategories();
     fetchItems();
     fetchLowStock();
@@ -39,6 +49,7 @@ export default function InventoryPage() {
     try {
       const response = await api.get<InventoryCategory[]>('/inventory/categories');
       setCategories(response.data);
+      cache.set(CACHE_KEY_CATEGORIES, response.data);
     } catch (err) {
       console.error('Failed to fetch categories:', err);
     }
@@ -46,10 +57,23 @@ export default function InventoryPage() {
 
   const fetchItems = async () => {
     try {
-      setLoading(true);
+      // Load from cache first for instant display
+      if (selectedCategory === 'all') {
+        const cached = cache.get<InventoryItem[]>(CACHE_KEY_ITEMS);
+        if (cached) {
+          setItems(cached);
+          setLoading(false);
+        }
+      }
+
       const params = selectedCategory !== 'all' ? { category_id: selectedCategory } : {};
       const response = await api.get<InventoryItem[]>('/inventory/', { params });
       setItems(response.data);
+
+      // Only cache "all" items view
+      if (selectedCategory === 'all') {
+        cache.set(CACHE_KEY_ITEMS, response.data);
+      }
     } catch (err) {
       console.error('Failed to fetch items:', err);
     } finally {

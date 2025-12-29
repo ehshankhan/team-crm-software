@@ -3,11 +3,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
+import { cache } from '@/lib/cache';
 import { Project } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { FolderKanban, Plus, Users, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import CreateProjectModal from '@/components/projects/CreateProjectModal';
+
+const CACHE_KEY = 'projects_list';
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -19,24 +22,33 @@ export default function ProjectsPage() {
   const canCreateProject = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
 
   useEffect(() => {
-    fetchProjects();
+    // Load from cache immediately
+    const cached = cache.get<Project[]>(CACHE_KEY);
+    if (cached) {
+      setProjects(cached);
+      setLoading(false);
+    }
+
+    // Fetch fresh data in background
+    fetchProjects(!cached);
   }, []);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) setLoading(true);
       const response = await api.get<Project[]>('/projects/');
       setProjects(response.data);
+      cache.set(CACHE_KEY, response.data);
     } catch (err) {
       console.error('Failed to fetch projects:', err);
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   };
 
   const handleProjectCreated = () => {
     setShowCreateModal(false);
-    fetchProjects();
+    fetchProjects(false); // Refresh in background
   };
 
   const getStatusColor = (status: string) => {
