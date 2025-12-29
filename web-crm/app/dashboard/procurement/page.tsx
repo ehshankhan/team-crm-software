@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
-import { Package, Copy, Trash2, CheckCircle, Send } from 'lucide-react';
+import { Package, Copy, Trash2, CheckCircle, Send, Filter } from 'lucide-react';
 
 interface ProcurementItem {
   id: string;
@@ -56,6 +56,11 @@ export default function ProcurementPage() {
   });
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
+  // Filter states
+  const [filterVendor, setFilterVendor] = useState('');
+  const [filterUser, setFilterUser] = useState('');
+  const [filterPriority, setFilterPriority] = useState('');
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -76,6 +81,36 @@ export default function ProcurementPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Get unique vendors from items
+  const uniqueVendors = Array.from(new Set(items.map(item => item.vendor))).sort();
+
+  // Get unique users from items
+  const uniqueUsers = Array.from(
+    new Set(items.map(item => item.requester?.full_name).filter(Boolean))
+  ).sort();
+
+  // Apply filters to items
+  const filteredItems = items.filter(item => {
+    if (filterVendor && item.vendor !== filterVendor) return false;
+    if (filterUser && item.requester?.full_name !== filterUser) return false;
+    if (filterPriority && item.priority !== filterPriority) return false;
+    return true;
+  });
+
+  // Apply filters to non-gem items
+  const filteredNonGemItems = nonGemItems.filter(item => {
+    if (filterVendor && item.vendor !== filterVendor) return false;
+    if (filterUser && item.requester?.full_name !== filterUser) return false;
+    if (filterPriority && item.priority !== filterPriority) return false;
+    return true;
+  });
+
+  const clearFilters = () => {
+    setFilterVendor('');
+    setFilterUser('');
+    setFilterPriority('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -335,7 +370,7 @@ export default function ProcurementPage() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Procurement ({items.length})
+            Procurement ({filteredItems.length})
           </button>
           <button
             onClick={() => setActiveTab('non-gem')}
@@ -345,21 +380,92 @@ export default function ProcurementPage() {
                 : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
           >
-            Non-Gem ({nonGemItems.length})
+            Non-Gem ({filteredNonGemItems.length})
           </button>
         </nav>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-md">
+        <div className="flex items-center gap-2 mb-3">
+          <Filter size={18} className="text-gray-600" />
+          <h3 className="text-sm font-semibold text-gray-700">Filters</h3>
+          {(filterVendor || filterUser || filterPriority) && (
+            <button
+              onClick={clearFilters}
+              className="ml-auto text-xs text-indigo-600 hover:text-indigo-800"
+            >
+              Clear All
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Vendor
+            </label>
+            <select
+              value={filterVendor}
+              onChange={(e) => setFilterVendor(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All Vendors</option>
+              {uniqueVendors.map(vendor => (
+                <option key={vendor} value={vendor}>{vendor}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Requested By
+            </label>
+            <select
+              value={filterUser}
+              onChange={(e) => setFilterUser(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All Users</option>
+              {uniqueUsers.map(user => (
+                <option key={user} value={user}>{user}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Priority
+            </label>
+            <select
+              value={filterPriority}
+              onChange={(e) => setFilterPriority(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
+            >
+              <option value="">All Priorities</option>
+              {PRIORITY_OPTIONS.map(priority => (
+                <option key={priority} value={priority}>
+                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Procurement Tab */}
       {activeTab === 'procurement' && (
         <div className="space-y-4">
-          {items.length === 0 ? (
+          {filteredItems.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-              <p>No procurement items yet. Add your first item above!</p>
+              <p>
+                {items.length === 0
+                  ? 'No procurement items yet. Add your first item above!'
+                  : 'No items match the selected filters.'}
+              </p>
             </div>
           ) : (
-            items.map((item) => (
+            filteredItems.map((item) => (
               <div key={item.id} className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex justify-between items-start mb-4">
                   <div className="flex-1">
@@ -428,13 +534,17 @@ export default function ProcurementPage() {
       {/* Non-Gem Tab */}
       {activeTab === 'non-gem' && (
         <div className="space-y-6">
-          {nonGemItems.length === 0 ? (
+          {filteredNonGemItems.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-400 mb-3" />
-              <p>No Non-Gem items yet. Export items from the Procurement tab!</p>
+              <p>
+                {nonGemItems.length === 0
+                  ? 'No Non-Gem items yet. Export items from the Procurement tab!'
+                  : 'No items match the selected filters.'}
+              </p>
             </div>
           ) : (
-            Object.entries(groupByVendor(nonGemItems)).map(([vendor, vendorItems]) => (
+            Object.entries(groupByVendor(filteredNonGemItems)).map(([vendor, vendorItems]) => (
               <div key={vendor} className="bg-white p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">
                   {vendor} ({vendorItems.length} items)
