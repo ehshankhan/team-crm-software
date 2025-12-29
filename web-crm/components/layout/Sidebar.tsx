@@ -13,6 +13,7 @@ import {
   LogOut,
   ClipboardList,
   ShoppingCart,
+  Plane,
   LucideIcon
 } from 'lucide-react';
 
@@ -27,6 +28,7 @@ const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/dashboard/users', icon: Users },
   { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
+  { name: 'Leave', href: '/dashboard/leave', icon: Plane },
   { name: 'Timesheets', href: '/dashboard/timesheets', icon: FileText },
   { name: 'Daily Tracker', href: '/dashboard/daily-log', icon: ClipboardList },
   { name: 'Projects', href: '/dashboard/projects', icon: FolderKanban },
