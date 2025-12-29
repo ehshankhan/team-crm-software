@@ -13,6 +13,7 @@ from app.models.procurement import ProcurementItem
 from app.models.inventory import InventoryItem, InventoryCategory
 from app.models.user import User
 from app.api.deps import get_current_user
+from app.core.permissions import Permission
 
 router = APIRouter()
 
