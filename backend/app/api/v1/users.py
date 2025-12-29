@@ -116,6 +116,7 @@ def create_user(
         )
 
     # Create new user
+    # Super admin is always active, other users start inactive until they check in
     hashed_password = get_password_hash(user_data.password)
     new_user = User(
         email=user_data.email,
@@ -124,7 +125,7 @@ def create_user(
         phone=user_data.phone,
         avatar_url=user_data.avatar_url,
         role_id=user_data.role_id,
-        is_active=True
+        is_active=True if role.name == Permission.SUPER_ADMIN else False
     )
 
     db.add(new_user)

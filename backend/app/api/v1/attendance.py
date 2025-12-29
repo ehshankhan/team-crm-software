@@ -72,6 +72,10 @@ def check_in(
         )
         db.add(attendance)
 
+    # Set user as active when they check in (except super_admin who is always active)
+    if current_user.role and current_user.role.name != Permission.SUPER_ADMIN:
+        current_user.is_active = True
+
     db.commit()
     db.refresh(attendance)
 
@@ -124,6 +128,10 @@ def check_out(
 
     if check_out_data.notes:
         attendance.notes = check_out_data.notes
+
+    # Set user as inactive when they check out (except super_admin who is always active)
+    if current_user.role and current_user.role.name != Permission.SUPER_ADMIN:
+        current_user.is_active = False
 
     db.commit()
     db.refresh(attendance)
