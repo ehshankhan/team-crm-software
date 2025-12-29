@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Team Management CRM"
 
     # CORS
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001,https://team-crm-software.vercel.app"
 
     # Pydantic v2 configuration
     model_config = SettingsConfigDict(
