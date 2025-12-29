@@ -129,9 +129,26 @@ export default function UsersPage() {
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-center">
-                        <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">
-                          {user.project_count || 0}
-                        </span>
+                        <div className="relative group inline-block">
+                          <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800 cursor-pointer">
+                            {user.project_count || 0}
+                          </span>
+                          {user.project_names && user.project_names.length > 0 && (
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10 w-48">
+                              <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-lg">
+                                <div className="font-semibold mb-1">Projects:</div>
+                                <ul className="space-y-1">
+                                  {user.project_names.map((name, idx) => (
+                                    <li key={idx} className="text-gray-200">• {name}</li>
+                                  ))}
+                                </ul>
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                  <div className="border-4 border-transparent border-t-gray-900"></div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {user.is_active ? (

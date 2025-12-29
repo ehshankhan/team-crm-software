@@ -37,18 +37,28 @@ def list_users(
     # Check permissions
     require_role(current_user, [Permission.SUPER_ADMIN, Permission.MANAGER])
 
-    # Get users with project count
-    from app.models.project import ProjectMember
+    # Get users with project count and names
+    from app.models.project import ProjectMember, Project
     from sqlalchemy import func
 
     users = db.query(User).offset(skip).limit(limit).all()
 
-    # Add project count to each user
+    # Add project count and names to each user
     for user in users:
-        project_count = db.query(func.count(ProjectMember.id)).filter(
+        # Get project memberships with project details
+        memberships = db.query(ProjectMember).filter(
             ProjectMember.user_id == user.id
-        ).scalar()
-        user.project_count = project_count or 0
+        ).all()
+
+        # Get project names
+        project_names = []
+        for membership in memberships:
+            project = db.query(Project).filter(Project.id == membership.project_id).first()
+            if project:
+                project_names.append(project.name)
+
+        user.project_count = len(project_names)
+        user.project_names = project_names
 
     return users
 

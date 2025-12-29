@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 from uuid import UUID
 
@@ -52,6 +52,7 @@ class UserResponse(UserBase):
     updated_at: datetime
     role: Optional[RoleResponse] = None
     project_count: Optional[int] = 0
+    project_names: Optional[List[str]] = []
 
     class Config:
         from_attributes = True

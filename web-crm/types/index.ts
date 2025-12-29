@@ -8,6 +8,7 @@ export interface User {
   created_at: string;
   role?: Role;
   project_count?: number;
+  project_names?: string[];
 }
 
 export interface Role {
