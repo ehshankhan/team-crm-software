@@ -12,10 +12,18 @@ import {
   Package,
   LogOut,
   ClipboardList,
-  ShoppingCart
+  ShoppingCart,
+  LucideIcon
 } from 'lucide-react';
 
-const navigationItems = [
+interface NavigationItem {
+  name: string;
+  href: string;
+  icon: LucideIcon;
+  roles?: string[];
+}
+
+const navigationItems: NavigationItem[] = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Users', href: '/dashboard/users', icon: Users },
   { name: 'Attendance', href: '/dashboard/attendance', icon: Clock },
@@ -35,7 +43,7 @@ export default function Sidebar() {
     window.location.href = '/login';
   };
 
-  const canAccessRoute = (route: typeof navigationItems[0]) => {
+  const canAccessRoute = (route: NavigationItem) => {
     if (!route.roles) return true;
     return route.roles.includes(user?.role?.name || '');
   };
