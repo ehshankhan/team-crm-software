@@ -7,6 +7,7 @@ export interface User {
   is_active: boolean;
   created_at: string;
   role?: Role;
+  project_count?: number;
 }
 
 export interface Role {

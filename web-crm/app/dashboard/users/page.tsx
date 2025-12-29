@@ -100,6 +100,9 @@ export default function UsersPage() {
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Role
                     </th>
+                    <th className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                      Projects
+                    </th>
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Status
                     </th>
@@ -123,6 +126,11 @@ export default function UsersPage() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         <span className="inline-flex rounded-full px-2 text-xs font-semibold leading-5 bg-blue-100 text-blue-800">
                           {user.role?.name || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-sm text-center">
+                        <span className="inline-flex items-center justify-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-semibold text-indigo-800">
+                          {user.project_count || 0}
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">

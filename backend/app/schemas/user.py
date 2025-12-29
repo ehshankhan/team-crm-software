@@ -51,6 +51,7 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
     role: Optional[RoleResponse] = None
+    project_count: Optional[int] = 0
 
     class Config:
         from_attributes = True
