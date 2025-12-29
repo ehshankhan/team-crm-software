@@ -11,7 +11,8 @@ import {
   FolderKanban,
   Package,
   LogOut,
-  ClipboardList
+  ClipboardList,
+  ShoppingCart
 } from 'lucide-react';
 
 const navigationItems = [
@@ -22,6 +23,7 @@ const navigationItems = [
   { name: 'Daily Tracker', href: '/dashboard/daily-log', icon: ClipboardList },
   { name: 'Projects', href: '/dashboard/projects', icon: FolderKanban },
   { name: 'Inventory', href: '/dashboard/inventory', icon: Package },
+  { name: 'Procurement', href: '/dashboard/procurement', icon: ShoppingCart },
 ];
 
 export default function Sidebar() {
