@@ -516,7 +516,7 @@ export default function ProcurementPage() {
                 </div>
 
                 <div className="flex gap-2 mt-4">
-                  {/* Only show Received button to requester, manager, or admin */}
+                  {/* Only show Received and Delete buttons to requester, manager, or admin */}
                   {(item.requester?.id === user?.id ||
                     user?.role?.name === 'super_admin' ||
                     user?.role?.name === 'manager') && (
@@ -537,6 +537,13 @@ export default function ProcurementPage() {
                       >
                         <CheckCircle size={16} />
                         Received
+                      </button>
+                      <button
+                        onClick={() => handleDelete(item.id)}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                      >
+                        <Trash2 size={16} />
+                        Delete
                       </button>
                     </>
                   )}

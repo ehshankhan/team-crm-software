@@ -257,6 +257,8 @@ def delete_procurement_item(
 ):
     """
     Delete a procurement item.
+
+    Only the requester, managers, and admins can delete items.
     """
     item = db.query(ProcurementItem).filter(ProcurementItem.id == item_id).first()
 
@@ -264,6 +266,16 @@ def delete_procurement_item(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Procurement item not found"
+        )
+
+    # Check permissions - requester, manager, or admin can delete
+    is_requester = str(item.requested_by) == str(current_user.id)
+    is_manager = current_user.role and current_user.role.name in [Permission.SUPER_ADMIN, Permission.MANAGER]
+
+    if not is_requester and not is_manager:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only the requester, managers, or admins can delete procurement items"
         )
 
     db.delete(item)
