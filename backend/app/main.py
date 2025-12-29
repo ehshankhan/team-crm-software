@@ -42,7 +42,7 @@ def root():
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return {"status": "healthy", "version": "1.0.1"}
 
 
 # Create tables on startup
