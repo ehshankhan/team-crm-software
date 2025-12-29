@@ -195,15 +195,15 @@ def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_200_OK)
-def deactivate_user(
+def delete_user(
     user_id: UUID,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Deactivate a user (admin only).
+    Delete a user permanently (admin only).
 
-    This doesn't delete the user, just sets is_active to False.
+    This completely removes the user from the database.
     """
     # Check permissions
     require_role(current_user, [Permission.SUPER_ADMIN])
@@ -216,15 +216,15 @@ def deactivate_user(
             detail="User not found"
         )
 
-    # Prevent self-deactivation
+    # Prevent self-deletion
     if user.id == current_user.id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot deactivate your own account"
+            detail="Cannot delete your own account"
         )
 
-    # Deactivate user
-    user.is_active = False
+    # Delete user permanently
+    db.delete(user)
     db.commit()
 
-    return {"message": "User deactivated successfully"}
+    return {"message": "User deleted successfully"}

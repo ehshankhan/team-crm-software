@@ -33,19 +33,26 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  const handleUserCreated = () => {
+  const handleUserCreated = (newUser: User) => {
+    // Add new user to the list without refetching
+    setUsers(prevUsers => [...prevUsers, newUser]);
     setShowCreateModal(false);
-    fetchUsers();
   };
 
-  const handleUserUpdated = () => {
+  const handleUserUpdated = (updatedUser: User) => {
+    // Update user in the list without refetching
+    setUsers(prevUsers =>
+      prevUsers.map(user =>
+        user.id === updatedUser.id ? updatedUser : user
+      )
+    );
     setEditingUser(null);
-    fetchUsers();
   };
 
-  const handleUserDeleted = () => {
+  const handleUserDeleted = (userId: string) => {
+    // Remove user from the list without refetching
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     setDeletingUser(null);
-    fetchUsers();
   };
 
   if (loading) {

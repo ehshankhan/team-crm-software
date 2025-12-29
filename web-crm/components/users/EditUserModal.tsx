@@ -8,7 +8,7 @@ import { X } from 'lucide-react';
 interface EditUserModalProps {
   user: User;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (user: User) => void;
 }
 
 export default function EditUserModal({ user, onClose, onSuccess }: EditUserModalProps) {
@@ -54,8 +54,8 @@ export default function EditUserModal({ user, onClose, onSuccess }: EditUserModa
         updateData.password = formData.password;
       }
 
-      await api.put(`/users/${user.id}`, updateData);
-      onSuccess();
+      const response = await api.put<User>(`/users/${user.id}`, updateData);
+      onSuccess(response.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to update user');
     } finally {

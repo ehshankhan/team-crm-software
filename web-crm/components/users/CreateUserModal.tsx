@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
-import { Role } from '@/types';
+import { Role, User } from '@/types';
 import { X } from 'lucide-react';
 
 interface CreateUserModalProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (user: User) => void;
 }
 
 export default function CreateUserModal({ onClose, onSuccess }: CreateUserModalProps) {
@@ -44,8 +44,8 @@ export default function CreateUserModal({ onClose, onSuccess }: CreateUserModalP
     setError(null);
 
     try {
-      await api.post('/users/', formData);
-      onSuccess();
+      const response = await api.post<User>('/users/', formData);
+      onSuccess(response.data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to create user');
     } finally {

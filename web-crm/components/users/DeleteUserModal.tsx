@@ -8,7 +8,7 @@ import { X, AlertTriangle } from 'lucide-react';
 interface DeleteUserModalProps {
   user: User;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (userId: string) => void;
 }
 
 export default function DeleteUserModal({ user, onClose, onSuccess }: DeleteUserModalProps) {
@@ -21,7 +21,7 @@ export default function DeleteUserModal({ user, onClose, onSuccess }: DeleteUser
 
     try {
       await api.delete(`/users/${user.id}`);
-      onSuccess();
+      onSuccess(user.id);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to delete user');
     } finally {
