@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { api } from '@/lib/api';
 import { cache } from '@/lib/cache';
 import { User } from '@/types';
+import { useAuthStore } from '@/store/authStore';
 import { Plus, Edit, Trash2, UserCheck, UserX } from 'lucide-react';
 import CreateUserModal from '@/components/users/CreateUserModal';
 import EditUserModal from '@/components/users/EditUserModal';
@@ -12,12 +13,15 @@ import DeleteUserModal from '@/components/users/DeleteUserModal';
 const CACHE_KEY = 'users_list';
 
 export default function UsersPage() {
+  const { user: currentUser } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+
+  const canManage = currentUser?.role?.name === 'super_admin' || currentUser?.role?.name === 'manager';
 
   const fetchUsers = async (showLoading = true) => {
     try {
@@ -106,15 +110,17 @@ export default function UsersPage() {
             A list of all team members including their name, email, role, and status.
           </p>
         </div>
-        <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add User
-          </button>
-        </div>
+        {canManage && (
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add User
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-col">
@@ -142,9 +148,11 @@ export default function UsersPage() {
                     <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                       Created
                     </th>
-                    <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                      <span className="sr-only">Actions</span>
-                    </th>
+                    {canManage && (
+                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-6">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
@@ -199,20 +207,22 @@ export default function UsersPage() {
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
-                      <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                        <button
-                          onClick={() => setEditingUser(user)}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
-                        >
-                          <Edit className="h-4 w-4 inline" />
-                        </button>
-                        <button
-                          onClick={() => setDeletingUser(user)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4 inline" />
-                        </button>
-                      </td>
+                      {canManage && (
+                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                          <button
+                            onClick={() => setEditingUser(user)}
+                            className="text-blue-600 hover:text-blue-900 mr-4"
+                          >
+                            <Edit className="h-4 w-4 inline" />
+                          </button>
+                          <button
+                            onClick={() => setDeletingUser(user)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="h-4 w-4 inline" />
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
