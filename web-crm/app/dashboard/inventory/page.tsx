@@ -24,6 +24,7 @@ export default function InventoryPage() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [stockItem, setStockItem] = useState<{ item: InventoryItem; type: 'in' | 'out' } | null>(null);
   const [historyItem, setHistoryItem] = useState<InventoryItem | null>(null);
+  const [showOutOfStock, setShowOutOfStock] = useState(true);
 
   const canManage = user?.role?.name === 'super_admin' || user?.role?.name === 'manager';
   const isAdmin = user?.role?.name === 'super_admin';
@@ -87,8 +88,12 @@ export default function InventoryPage() {
     return category?.name || 'Unknown';
   };
 
-  // Filter items based on search query
+  // Filter items based on search query and out-of-stock visibility
   const filteredItems = items.filter(item => {
+    // Filter by out-of-stock visibility
+    if (!showOutOfStock && item.quantity === 0) return false;
+
+    // Filter by search query
     if (!searchQuery) return true;
 
     const query = searchQuery.toLowerCase();
@@ -100,6 +105,8 @@ export default function InventoryPage() {
       getCategoryName(item.category_id).toLowerCase().includes(query)
     );
   });
+
+  const outOfStockCount = items.filter(item => item.quantity === 0).length;
 
   return (
     <div>
@@ -193,12 +200,33 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Search Results Counter */}
-        {searchQuery && (
-          <div className="mt-3 text-sm text-gray-600">
-            Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} matching "{searchQuery}"
+        {/* Show Out of Stock Toggle */}
+        <div className="mt-4 flex items-center justify-between border-t pt-3">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="showOutOfStock"
+              checked={showOutOfStock}
+              onChange={(e) => setShowOutOfStock(e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="showOutOfStock" className="ml-2 text-sm text-gray-700">
+              Show out-of-stock items
+              {outOfStockCount > 0 && (
+                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  {outOfStockCount}
+                </span>
+              )}
+            </label>
           </div>
-        )}
+
+          {/* Search Results Counter */}
+          {searchQuery && (
+            <div className="text-sm text-gray-600">
+              Found {filteredItems.length} item{filteredItems.length !== 1 ? 's' : ''} matching "{searchQuery}"
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Inventory Table */}
@@ -252,12 +280,17 @@ export default function InventoryPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
                           <span className={`text-sm font-semibold ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
                             {item.quantity} {item.unit || 'pcs'}
                           </span>
-                          {isLowStock && (
-                            <TrendingDown className="h-4 w-4 ml-2 text-red-500" />
+                          {item.quantity === 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
+                              Out of Stock
+                            </span>
+                          )}
+                          {isLowStock && item.quantity > 0 && (
+                            <TrendingDown className="h-4 w-4 text-red-500" />
                           )}
                         </div>
                         <div className="text-xs text-gray-500">
