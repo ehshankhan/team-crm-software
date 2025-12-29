@@ -32,11 +32,9 @@ def list_users(
     current_user: User = Depends(get_current_user)
 ):
     """
-    List all users (admin and manager only).
+    List all users (accessible to all authenticated users).
+    Create/Update/Delete operations remain restricted to admins and managers.
     """
-    # Check permissions
-    require_role(current_user, [Permission.SUPER_ADMIN, Permission.MANAGER])
-
     # Get users with project count and names
     from app.models.project import ProjectMember, Project
     from sqlalchemy import func
