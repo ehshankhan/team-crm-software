@@ -31,7 +31,24 @@
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Team CRM Management System\n\nFeatures:\n- User Management with RBAC \\(super_admin, manager, employee\\)\n- GPS-based Attendance System \\(check-in/out with location validation\\)\n- Timesheet Management \\(auto-generation + approval workflow\\)\n- Project Management \\(Kanban boards with drag-and-drop\\)\n- Inventory Management \\(categories, items, stock tracking, alerts\\)\n\nTech Stack:\nBackend: FastAPI, SQLAlchemy, PostgreSQL, JWT Auth\nFrontend: Next.js 14, TypeScript, Tailwind CSS, Zustand\nInfrastructure: Docker, Docker Compose\n\nDeployment:\n- Development environment ready\n- Production Docker configuration included\n- Comprehensive deployment guides \\(VPS, Vercel, Railway, etc.\\)\n\nSecurity:\n- JWT authentication with refresh tokens\n- Role-based access control\n- GPS location validation for attendance\n- Environment-based configuration\n\nGenerated with Claude Code\nhttps://claude.com/claude-code\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git remote add:*)",
+      "Bash(git config:*)",
+      "Bash(cmdkey:*)",
+      "Bash(node -e:*)",
+      "Bash(python:*)",
+      "Bash(echo:*)",
+      "Bash(git commit:*)",
+      "Bash(git rm:*)",
+      "Bash(pip install:*)",
+      "Bash(iconv:*)",
+      "Bash(alembic revision:*)",
+      "WebFetch(domain:team-crm-software-production.up.railway.app)",
+      "Bash(git reset:*)",
+      "Bash(railway variables:*)"
     ]
   }
 }

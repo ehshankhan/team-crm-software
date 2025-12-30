@@ -85,7 +85,7 @@ def list_non_gem_items(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Get items flagged for Non-Gem procurement.
+    Get items flagged for Non-Gem procurement (excludes completed items).
 
     Optional filter: vendor
     """
@@ -93,7 +93,8 @@ def list_non_gem_items(
         joinedload(ProcurementItem.requester)
     ).filter(
         ProcurementItem.is_non_gem == True,
-        ProcurementItem.status == "pending"
+        ProcurementItem.status == "pending",
+        ProcurementItem.non_gem_completed_at == None  # Exclude completed items
     )
 
     if vendor_filter:
@@ -180,6 +181,41 @@ def unmark_as_non_gem(
         )
 
     item.is_non_gem = False
+    db.commit()
+    db.refresh(item)
+
+    # Load requester
+    item.requester
+
+    return item
+
+
+@router.put("/{item_id}/complete-non-gem", response_model=ProcurementItemResponse)
+def complete_non_gem(
+    item_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Mark Non-Gem procurement as completed.
+    Sets completion date and removes from Non-Gem list.
+    """
+    item = db.query(ProcurementItem).filter(ProcurementItem.id == item_id).first()
+
+    if not item:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Procurement item not found"
+        )
+
+    if not item.is_non_gem:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Item is not flagged for Non-Gem procurement"
+        )
+
+    # Mark as completed with current timestamp
+    item.non_gem_completed_at = datetime.utcnow()
     db.commit()
     db.refresh(item)
 

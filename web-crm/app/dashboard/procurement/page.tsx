@@ -19,6 +19,7 @@ interface ProcurementItem {
   priority: string;
   status: string;
   is_non_gem: boolean;
+  non_gem_completed_at: string | null;
   requested_by: string;
   created_at: string;
   requester?: {
@@ -205,6 +206,19 @@ export default function ProcurementPage() {
     } catch (error) {
       console.error('Failed to unmark Non-Gem:', error);
       alert('Failed to remove from Non-Gem');
+    }
+  };
+
+  const handleCompleteNonGem = async (itemId: string) => {
+    if (!confirm('Mark this Non-Gem procurement as completed? This will remove it from the Non-Gem list.')) return;
+
+    try {
+      await api.put(`/procurement/${itemId}/complete-non-gem`);
+      fetchData();
+      alert('Non-Gem procurement marked as completed');
+    } catch (error) {
+      console.error('Failed to complete Non-Gem:', error);
+      alert('Failed to mark as completed');
     }
   };
 
@@ -553,7 +567,7 @@ export default function ProcurementPage() {
                       </button>
                     </>
                   )}
-                  {!item.is_non_gem && (
+                  {!item.is_non_gem && !item.non_gem_completed_at && (
                     <button
                       onClick={() => handleExportToNonGem(item.id)}
                       className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
@@ -613,8 +627,15 @@ export default function ProcurementPage() {
                           </button>
                         )}
                         <button
+                          onClick={() => handleCompleteNonGem(item.id)}
+                          className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
+                        >
+                          <CheckCircle size={16} />
+                          Mark Completed
+                        </button>
+                        <button
                           onClick={() => handleUnmarkNonGem(item.id)}
-                          className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                          className="flex items-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
                         >
                           <Trash2 size={16} />
                           Remove

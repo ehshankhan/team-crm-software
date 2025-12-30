@@ -40,6 +40,7 @@ class ProcurementItemResponse(ProcurementItemBase):
     id: UUID
     status: str
     is_non_gem: bool
+    non_gem_completed_at: Optional[datetime] = None
     requested_by: UUID
     received_at: Optional[datetime] = None
     created_at: datetime
