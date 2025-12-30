@@ -61,7 +61,7 @@ export default function ProcurementPage() {
     priority: 'medium',
     notes: ''
   });
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<{ [key: string]: string }>({});
 
   // Filter states
   const [filterVendor, setFilterVendor] = useState('');
@@ -166,15 +166,21 @@ export default function ProcurementPage() {
   };
 
   const handleMarkAsReceived = async (itemId: string) => {
-    if (!selectedCategoryId) {
+    const categoryId = selectedCategoryIds[itemId];
+    if (!categoryId) {
       alert('Please select an inventory category first');
       return;
     }
 
     try {
-      await api.post(`/procurement/${itemId}/receive?category_id=${selectedCategoryId}`);
+      await api.post(`/procurement/${itemId}/receive?category_id=${categoryId}`);
       fetchData();
-      setSelectedCategoryId('');
+      // Clear the category selection for this specific item
+      setSelectedCategoryIds(prev => {
+        const updated = { ...prev };
+        delete updated[itemId];
+        return updated;
+      });
       alert('Item marked as received and added to inventory');
     } catch (error) {
       console.error('Failed to mark as received:', error);
@@ -522,8 +528,8 @@ export default function ProcurementPage() {
                     user?.role?.name === 'manager') && (
                     <>
                       <select
-                        value={selectedCategoryId}
-                        onChange={(e) => setSelectedCategoryId(e.target.value)}
+                        value={selectedCategoryIds[item.id] || ''}
+                        onChange={(e) => setSelectedCategoryIds(prev => ({ ...prev, [item.id]: e.target.value }))}
                         className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500"
                       >
                         <option value="">Select Category</option>
